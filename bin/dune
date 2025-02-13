@@ -1,0 +1,4 @@
+(executable
+ (public_name diablo)
+ (name main)
+ (libraries diablo))
