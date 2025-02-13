@@ -1,7 +1,3 @@
-# Diablo
-
-Compiled functional programming language with static typing and a LLVM backend.
-
 <div align="center">
   <a href="https://diablo-lang.org" target="_blank"><img src="./img/logo.png" width="250" /></a>
 
@@ -12,20 +8,21 @@ Compiled functional programming language with static typing and a LLVM backend.
   </p>
 
   <p>
-    <a href="https://www.crystal-lang.org/"><img alt="The Crystal Programming Language" src="https://img.shields.io/badge/crystal-%23555555.svg?style=flat-square&logo=crystal&logoColor=white"/></a>
+    <a href="https://ocaml.org/"><img alt="OCaml Programming Language" src="https://img.shields.io/badge/OCaml-%23f18c02.svg?style=flat-square&logo=ocaml&logoColor=white"/></a>
   </p>
 </div>
 
 ## Description
 
-Diablo is a functional language designed to augment research in information security and the natural sciences.
+Diablo is a statically typed, functional language designed to augment research in information security and the natural sciences.
 
-The compiler was written in OCaml and uses LLVM 
-Diablo is an interpreted language that runs on top of a bytecode virtual machine (VM). All the core components of the language are written in Crystal.
+
+The compiler is written in OCaml and uses LLVM as its backend.
 
 It features an intuitive syntax that allows for rapidly developing prototypes:
 
 ```
+# This is a comment
 fn hello_world() {
     print("Hello World!")
 }
@@ -35,6 +32,7 @@ Refer to the [getting started guide](https://diablo-lang.org/guides/getting-star
 
 ### BNF Grammar
 
+```
 expr ::= id                                        -- identifier (refer to values)
     | int                                          -- integer
     | bool                                         -- boolean
@@ -52,11 +50,7 @@ id ::= <identifiers>                               -- identifier names (immutabl
 int ::= <integers>                                 -- integer values
 
 bool ::= true | false                              -- boolean values
-
-## Resources
-
-- [OCaml Programming: Correct + Efficient + Beautiful](https://cs3110.github.io/textbook)
-- [Creating the Bolt Compiler](https://mukulrathi.com/create-your-own-programming-language/intro-to-compiler/)
+```
 
 ## Contributing
 
@@ -65,3 +59,8 @@ TBD - Not open for contributions at this time until alpha version is implemented
 ## License
 
 TBD
+
+## Resources
+
+- [OCaml Programming: Correct + Efficient + Beautiful](https://cs3110.github.io/textbook)
+- [Creating the Bolt Compiler](https://mukulrathi.com/create-your-own-programming-language/intro-to-compiler/)
