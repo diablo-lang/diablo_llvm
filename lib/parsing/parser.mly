@@ -10,6 +10,7 @@
 %token RBRACE
 %token LANGLE
 %token RANGLE
+%token COMMA
 %token SEMICOLON
 %token EQUAL
 %token PLUS
@@ -23,8 +24,10 @@
 %token LET
 %token TRUE
 %token FALSE
+%token FUNCTION
 %token IF
 %token ELSE
+%token MAIN
 %token EOF
 
 %right EQUAL
@@ -33,12 +36,12 @@
 %left AND OR
 %nonassoc BANG
 
-%start <Ast.expr> program
+%start <Ast.program> program
 
 %%
 
 program:
-    | e = expr; EOF { e }
+    | function_defns=list(function_defn); main=main_expr; EOF { Program(function_defns, main) }
     ;
 
 block:
@@ -55,6 +58,22 @@ expr:
     | e1=expr op=bin_op e2=expr { BinOp(op, e1, e2) }
     | LET; id=ID; EQUAL; e=expr { Let(id, e) }
     | IF; cond_expr=expr; then_block=block; ELSE; else_block=block { If(cond_expr, then_block, else_block) }
+    ;
+
+param:
+    | name=ID; { Param(name) }
+    ;
+
+params:
+    | LPAREN; params=separated_list(COMMA, param); RPAREN { params }
+    ;
+
+function_defn:
+    | FUNCTION; name=ID; params=params; body=block; { Function(name, params, body) }
+    ;
+
+main_expr:
+    | MAIN; LPAREN; RPAREN; body=block; { body }
     ;
 
 %inline un_op:

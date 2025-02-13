@@ -1,5 +1,5 @@
 open Lexing
-open Diablo
+open Parsing
 
 let () =
   let lexbuf = from_channel stdin in

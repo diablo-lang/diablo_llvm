@@ -21,6 +21,7 @@ rule read_token =
     | "}" { RBRACE }
     | "<" { LANGLE }
     | ">" { RANGLE }
+    | "," { COMMA }
     | ";" { SEMICOLON }
     | "=" { EQUAL }
     | "+" { PLUS }
@@ -32,14 +33,17 @@ rule read_token =
     | "or" { OR }
     | "!" { BANG }
     | "let" { LET }
+    | "fn" { FUNCTION }
     | "true" { TRUE }
     | "false" { FALSE }
     | "if" { IF }
     | "else" { ELSE }
+    | "main" { MAIN }
     | whitespace { read_token lexbuf }
     | "#" { read_comment lexbuf }
     | integer { INT (int_of_string (Lexing.lexeme lexbuf)) }
     | identifier { ID (Lexing.lexeme lexbuf) }
+    | newline { Lexing.new_line lexbuf; read_token lexbuf }
     | eof { EOF }
     | _ { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
 
