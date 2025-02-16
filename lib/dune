@@ -1,3 +1,3 @@
 (library
- (libraries parsing ast)
- (name diablo))
+ (name diablo)
+ (libraries parsing))

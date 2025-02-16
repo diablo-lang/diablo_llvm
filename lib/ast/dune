@@ -1,3 +1,2 @@
 (library
- (modules ast)
  (name ast))

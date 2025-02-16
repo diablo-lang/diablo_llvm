@@ -34,6 +34,9 @@ rule read_token =
     | "!" { BANG }
     | "let" { LET }
     | "fn" { FUNCTION }
+    | "int" { TYPE_INT }
+    | "bool" { TYPE_BOOL }
+    | "void" { TYPE_VOID }
     | "true" { TRUE }
     | "false" { FALSE }
     | "if" { IF }

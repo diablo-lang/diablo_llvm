@@ -1,42 +1,5 @@
-type bin_op =
-  | BinOpPlus
-  | BinOpMinus
-  | BinOpMult
-  | BinOpDiv
-  | BinOpRem
-  | BinOpLessThan
-  | BinOpGreaterThan
-  | BinOpLessThanEqual
-  | BinOpGreaterThanEqual
-  | BinOpAnd
-  | BinOpOr
-  | BinOpEqual
-  | BinOpNotEqual
-
-type un_op =
-  | UnOpNot
-  | UnOpNegate
-
-type expr =
-  | Identifier of string
-  | Integer of int
-  | Boolean of bool
-  | UnOp of un_op * expr
-  | BinOp of bin_op * expr * expr
-  | Let of string * expr
-  | If of expr * block * block
-  | Block of expr list
-  | Function of string * block
-and
-  block = Block of expr list
-
-type param =
-  | Param of string
-
-type function_defn =
-  | Function of string * param list * block
-
-type program = Program of function_defn list * block
+open Ast.Ast_types
+open Parsed_ast
 
 let pprint_bin_op op =
   match op with
@@ -71,7 +34,6 @@ let rec pprint_expr expr =
   | If (e, b1, b2) ->
     Printf.sprintf "if %s then %s else %s" (pprint_expr e) (pprint_block b1) (pprint_block b2)
   | Block es -> Printf.sprintf "[%s]" (String.concat ", " (List.map pprint_expr es))
-  | Function (s, b) -> Printf.sprintf "function %s %s" s (pprint_block b)
 
 and
   pprint_block block =
@@ -80,7 +42,7 @@ and
 
 let rec pprint_function_defn function_defn =
   match function_defn with
-  | Function (s, ps, b) ->  Printf.sprintf "function %s(%s) %s" s (String.concat ", " (List.map pprint_param ps)) (pprint_block b)
+  | TFunction (s, ps, b) ->  Printf.sprintf "function %s(%s) %s" s (String.concat ", " (List.map pprint_param ps)) (pprint_block b)
 and
   pprint_param param =
     match param with

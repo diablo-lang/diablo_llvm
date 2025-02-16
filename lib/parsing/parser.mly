@@ -1,5 +1,6 @@
 %{
-    open Ast
+    open Ast.Ast_types
+    open Parsed_ast
 %}
 
 %token <int> INT
@@ -22,6 +23,9 @@
 %token OR
 %token BANG
 %token LET
+%token TYPE_INT
+%token TYPE_BOOL
+%token TYPE_VOID
 %token TRUE
 %token FALSE
 %token FUNCTION
@@ -36,7 +40,7 @@
 %left AND OR
 %nonassoc BANG
 
-%start <Ast.program> program
+%start <Parsed_ast.program> program
 
 %%
 
@@ -69,7 +73,7 @@ params:
     ;
 
 function_defn:
-    | FUNCTION; name=ID; params=params; body=block; { Function(name, params, body) }
+    | FUNCTION; name=ID; params=params; body=block; { TFunction(name, params, body) }
     ;
 
 main_expr:

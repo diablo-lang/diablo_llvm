@@ -1,7 +1,7 @@
 
 open Parsing
 
-let parse (s : string): Ast.program =
+let parse (s : string): Parsed_ast.program =
   let lexbuf = Lexing.from_string s in
   let program = Parser.program Lexer.read_token lexbuf in
   program
@@ -24,7 +24,7 @@ let () =
       let s = read_file filename in   (* Read the entire file contents *)
       print_endline s;
       let program = parse s in        (* Parse the content *)
-      print_endline (Ast.pprint_program program)
+      print_endline (Pprint_past.pprint_program program)
   with
   | Lexer.SyntaxError msg -> Printf.printf "Lexer error: %s\n" msg
   | Parser.Error -> Printf.printf "Parser error\n"
