@@ -143,3 +143,33 @@ let type_check (Parsed_ast.Program (functions, main_expr)) =
   (* Type check the main expression *)
   let _, main_type = Infer.infer_block env main_expr in
   main_type
+
+  let rec annotate_expr env expr =
+    let _s, inferred_type = Infer.infer env expr in
+    match expr with
+    | Parsed_ast.Identifier x -> Typed_ast.Identifier x
+    | Parsed_ast.Integer n -> Typed_ast.Integer n
+    | Parsed_ast.Boolean b -> Typed_ast.Boolean b
+    | Parsed_ast.UnOp (op, e) ->
+        Typed_ast.UnOp (inferred_type, op, annotate_expr env e)
+    | Parsed_ast.BinOp (op, e1, e2) ->
+        Typed_ast.BinOp (inferred_type, op, annotate_expr env e1, annotate_expr env e2)
+    | Parsed_ast.Let (x, e) ->
+        Typed_ast.Let (inferred_type, x, annotate_expr env e)
+    | Parsed_ast.If (cond, then_branch, else_branch) ->
+        Typed_ast.If (inferred_type, annotate_expr env cond, annotate_block env then_branch, annotate_block env else_branch)
+    | Parsed_ast.Call (fn, args) ->
+        Typed_ast.Call (inferred_type, fn, List.map (annotate_expr env) args)
+  
+  and annotate_block env (Parsed_ast.Block exprs) =
+    let _, block_type = Infer.infer_block env (Parsed_ast.Block exprs) in
+    Typed_ast.Block (block_type, List.map (annotate_expr env) exprs)
+  
+  let annotate_function (Parsed_ast.TFunction (name, params, return_type, body)) =
+    let param_env = List.map (fun (Ast.Ast_types.TParam (t, p)) -> (p, t)) params in
+    Typed_ast.TFunction (name, params, return_type, annotate_block param_env body)
+  
+  let convert_to_typed_ast (Parsed_ast.Program (functions, main_block)) =
+    let typed_functions = List.map annotate_function functions in
+    let typed_main = annotate_block TypeEnv.empty main_block in
+    Typed_ast.Program (typed_functions, typed_main)

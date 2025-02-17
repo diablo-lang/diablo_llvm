@@ -12,7 +12,6 @@
 %token LANGLE
 %token RANGLE
 %token RARROW
-%token NEWLINE
 %token RETURN
 %token COMMA
 %token SEMICOLON
@@ -48,16 +47,11 @@
 %%
 
 program:
-    | list(NEWLINE); function_defns=list(function_defn); main=main_block; EOF { Program(function_defns, main) }
-    ;
-
-expr_terminator:
-    | t=SEMICOLON { t }
-    | t=NEWLINE { t }
+    | function_defns=list(function_defn); main=main_block; EOF { Program(function_defns, main) }
     ;
 
 block:
-    | LBRACE; exprs=separated_list_with_optional_trailing_sep(expr_terminator, expr); RBRACE { Block(exprs) }
+    | LBRACE; exprs=separated_list(SEMICOLON, expr); RBRACE { Block(exprs) }
     ;
 
 expr:
@@ -86,7 +80,7 @@ args:
     | LPAREN; args=separated_list(COMMA, expr); RPAREN { args }
 
 function_defn:
-    | FUNCTION; name=ID; params=params; RARROW; return_type=diablo_type; body=block; list(NEWLINE) { TFunction(name, params, return_type, body) }
+    | FUNCTION; name=ID; params=params; RARROW; return_type=diablo_type; body=block { TFunction(name, params, return_type, body) }
     ;
 
 diablo_type:
@@ -96,12 +90,7 @@ diablo_type:
     ;
 
 main_block:
-    | MAIN; LPAREN; RPAREN; body=block; list(NEWLINE) { body }
-    ;
-
-separated_list_with_optional_trailing_sep(X, Y) :
-    | list(NEWLINE); xs=Y; list(NEWLINE) { xs }
-    | { [] }
+    | MAIN; LPAREN; RPAREN; body=block { body }
     ;
 
 %inline un_op:

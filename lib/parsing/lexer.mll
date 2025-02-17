@@ -48,7 +48,7 @@ rule read_token =
     | "#" { read_comment lexbuf }
     | integer { INT (int_of_string (Lexing.lexeme lexbuf)) }
     | identifier { ID (Lexing.lexeme lexbuf) }
-    | newline { Lexing.new_line lexbuf; NEWLINE }
+    | newline { Lexing.new_line lexbuf; read_token lexbuf }
     | eof { EOF }
     | _ { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
 
