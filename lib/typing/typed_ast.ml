@@ -4,16 +4,13 @@ type expr =
   | Identifier  of string
   | Integer     of int
   | Boolean     of bool
-  | UnOp        of diablo_type *  un_op * expr
-  | BinOp       of diablo_type *  bin_op * expr * expr
-  | Let         of diablo_type * string * expr
-  | If          of diablo_type * expr * block * block
-  | Block       of expr list
-and
-  block = Block of diablo_type * expr list
+  | UnOp        of Type.t *  un_op * expr
+  | BinOp       of Type.t *  bin_op * expr * expr
+  | Let         of Type.t * string * expr
+  | If          of Type.t * expr * expr * expr
 
 type function_defn =
-  | TFunction of string * diablo_type * param list * block
+  | TFunction of string * param list * Type.t * expr
 
 type program =
-  | Program of function_defn list * block
+  | Program of function_defn list * expr

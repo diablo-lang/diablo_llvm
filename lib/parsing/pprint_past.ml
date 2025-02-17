@@ -31,23 +31,28 @@ let rec pprint_expr expr =
   | BinOp (op, e1, e2) ->
     Printf.sprintf "(%s %s %s)" (pprint_expr e1) (pprint_bin_op op) (pprint_expr e2)
   | Let (s, e) -> Printf.sprintf "let %s = %s" s (pprint_expr e)
-  | If (e, b1, b2) ->
-    Printf.sprintf "if %s then %s else %s" (pprint_expr e) (pprint_block b1) (pprint_block b2)
-  | Block es -> Printf.sprintf "[%s]" (String.concat ", " (List.map pprint_expr es))
+  | If (e, then_branch, else_branch) ->
+    Printf.sprintf "if %s then %s else %s" (pprint_expr e) (pprint_block then_branch) (pprint_block else_branch)
+  | Call (s, es) -> Printf.sprintf "%s(%s)" s (String.concat ", " (List.map pprint_expr es))
 
-and
-  pprint_block block =
-    match block with
-    | Block es -> Printf.sprintf "[%s]" (String.concat ", " (List.map pprint_expr es))
+and pprint_block block =
+  match block with
+  | Block exprs -> String.concat "\n" (List.map pprint_expr exprs)
 
 let rec pprint_function_defn function_defn =
   match function_defn with
-  | TFunction (s, ps, b) ->  Printf.sprintf "function %s(%s) %s" s (String.concat ", " (List.map pprint_param ps)) (pprint_block b)
+  | TFunction (name, params, return_type, body) ->
+    Printf.sprintf "function %s(%s): %s = %s"
+      name
+      (String.concat ", " (List.map pprint_param params))
+      (Type.to_string return_type)
+      (pprint_block body)
 and
   pprint_param param =
     match param with
-    | Param s -> s
+    | TParam (t, s) -> Printf.sprintf "%s %s" (Type.to_string t) s
 
 let pprint_program program =
   match program with
-  | Program (fs, b) -> Printf.sprintf "%s %s" (String.concat "\n" (List.map pprint_function_defn fs)) (pprint_block b)
+  | Program (fs, exprs) -> Printf.sprintf "%s %s" (String.concat "\n" (List.map pprint_function_defn fs)) (pprint_block exprs)
+

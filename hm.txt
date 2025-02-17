@@ -1,0 +1,136 @@
+open Ast.Ast_types
+open Parsing
+
+exception TypeError of string
+
+module TypeEnv = struct
+  type t = (string * Type.t) list
+
+  let empty : t = []
+
+  let extend env (x, t) = (x, t) :: env
+
+  let find env x =
+    try List.assoc x env
+    with Not_found -> raise (TypeError ("Unbound variable: " ^ x))
+end
+
+module Subst = struct
+  type t = (string * Type.t) list
+
+  let empty : t = []
+
+  let rec apply (s : t) (t : Type.t) : Type.t =
+    match t with
+    | Type.TVar x -> (try List.assoc x s with Not_found -> t)
+    | Type.TFun (args, ret) -> Type.TFun (List.map (apply s) args, apply s ret)
+    | _ -> t
+
+  let compose (s1 : t) (s2 : t) : t =
+    let s2' = List.map (fun (x, t) -> (x, apply s1 t)) s2 in
+    s1 @ s2'
+end
+
+module Unify = struct
+  exception UnificationError of string
+
+  let rec unify (t1 : Type.t) (t2 : Type.t) : Subst.t =
+    match (t1, t2) with
+    | Type.TInt, Type.TInt | Type.TBool, Type.TBool | Type.TVoid, Type.TVoid -> Subst.empty
+    | Type.TVar x, t | t, Type.TVar x -> if t = Type.TVar x then Subst.empty else [(x, t)]
+    | Type.TFun (args1, ret1), Type.TFun (args2, ret2) when List.length args1 = List.length args2 ->
+      let s1 = List.fold_left2
+        (fun subst a1 a2 -> Subst.compose subst (unify (Subst.apply subst a1) (Subst.apply subst a2)))
+        Subst.empty args1 args2
+      in
+      let s2 = unify (Subst.apply s1 ret1) (Subst.apply s1 ret2) in
+      Subst.compose s1 s2
+    | _, _ -> raise (UnificationError ("Cannot unify " ^ Type.to_string t1 ^ " with " ^ Type.to_string t2))
+end
+
+module Infer = struct
+  let count = ref 0
+
+  let fresh_tvar () =
+    let v = "'t" ^ string_of_int !count in
+    incr count;
+    Type.TVar v
+
+  let rec infer env expr =
+    match expr with
+    | Parsed_ast.Identifier x -> ([], TypeEnv.find env x)
+    | Parsed_ast.Integer _ -> ([], Type.TInt)
+    | Parsed_ast.Boolean _ -> ([], Type.TBool)
+    | Parsed_ast.UnOp (UnOpNegate, e) ->
+      let s1, t1 = infer env e in
+      let s2 = Unify.unify (Subst.apply s1 t1) Type.TInt in
+      (Subst.compose s1 s2, Type.TInt)
+    | Parsed_ast.UnOp (UnOpNot, e) ->
+      let s1, t1 = infer env e in
+      let s2 = Unify.unify (Subst.apply s1 t1) Type.TBool in
+      (Subst.compose s1 s2, Type.TBool)
+    | Parsed_ast.BinOp (op, e1, e2) ->
+      let s1, t1 = infer env e1 in
+      let s2, t2 = infer (List.map (fun (x, t) -> (x, Subst.apply s1 t)) env) e2 in
+      let s3 = Unify.unify (Subst.apply s2 t1) (Subst.apply s2 t2) in
+      let result_type =
+        match op with
+        | BinOpPlus | BinOpMinus | BinOpMult | BinOpDiv | BinOpRem -> Type.TInt
+        | BinOpAnd | BinOpOr -> Type.TBool
+        | BinOpLessThan | BinOpGreaterThan | BinOpLessThanEqual | BinOpGreaterThanEqual -> Type.TBool
+        | BinOpEqual | BinOpNotEqual -> Type.TBool
+      in
+      (Subst.compose (Subst.compose s1 s2) s3, result_type)
+    | Parsed_ast.Let (x, e) ->
+      let s1, t1 = infer env e in
+      let _env' = TypeEnv.extend env (x, t1) in
+      (s1, t1)
+    | Parsed_ast.If (cond, then_branch, else_branch) ->
+      let s1, t1 = infer env cond in
+      let s2 = Unify.unify (Subst.apply s1 t1) Type.TBool in
+      let s3, t2 = infer (List.map (fun (x, t) -> (x, Subst.apply s2 t)) env) then_branch in
+      let s4, t3 = infer (List.map (fun (x, t) -> (x, Subst.apply s2 t)) env) else_branch in
+      let s5 = Unify.unify (Subst.apply s4 t2) (Subst.apply s4 t3) in
+      (Subst.compose (Subst.compose (Subst.compose s1 s2) s3) (Subst.compose s4 s5), Subst.apply s5 t2)
+    | Parsed_ast.Call (fn, args) ->
+      let fn_type =
+        try TypeEnv.find env fn
+        with Not_found -> raise (TypeError ("Undefined function: " ^ fn))
+      in
+      (match fn_type with
+      | Type.TFun (param_types, return_type) ->
+        if List.length param_types <> List.length args then
+          raise (TypeError ("Function " ^ fn ^ " expected " ^ string_of_int (List.length param_types) ^ " arguments, but got " ^ string_of_int (List.length args)))
+        else
+          let s1, inferred_arg_types = List.split (List.map (infer env) args) in
+          let s1 = List.fold_left Subst.compose Subst.empty s1 in
+          let s2 =
+            List.fold_left2
+              (fun subst param_t inferred_t -> Subst.compose subst (Unify.unify (Subst.apply subst param_t) (Subst.apply subst inferred_t)))
+              s1 param_types inferred_arg_types
+          in
+          (s2, Subst.apply s2 return_type)
+      | _ -> raise (TypeError ("Expected function, got " ^ Type.to_string fn_type)))
+end
+
+let type_check (Parsed_ast.Program (functions, main_expr)) =
+  (* Build the initial environment with function signatures *)
+  let env = List.fold_left (fun env (Parsed_ast.TFunction (name, params, return_type, _body)) ->
+    let param_types = List.map (fun (TParam (t, _)) -> t) params in
+    TypeEnv.extend env (name, Type.TFun (param_types, return_type))
+  ) TypeEnv.empty functions in
+
+  (* Verify each function body *)
+  List.iter (fun (Parsed_ast.TFunction (_name, params, return_type, body)) ->
+    let env_with_params = List.fold_left (fun env (TParam (t, param_name)) ->
+      TypeEnv.extend env (param_name, t)
+    ) env params in
+    let _, inferred_return_type = Infer.infer env_with_params body in
+    (* Ensure the return type matches *)
+    let _ = Unify.unify inferred_return_type return_type in
+    ()
+  ) functions;
+
+  (* Type check the main expression *)
+  let _, main_type = Infer.infer env main_expr in
+  main_type

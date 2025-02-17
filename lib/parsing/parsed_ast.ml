@@ -8,12 +8,13 @@ type expr =
   | BinOp       of bin_op * expr * expr
   | Let         of string * expr
   | If          of expr * block * block
-  | Block       of expr list
-and
-  block = Block of expr list
+  | Call        of string * expr list
+
+and block =
+  | Block of expr list
 
 type function_defn =
-  | TFunction of string * param list * block
+  | TFunction of string * param list * Type.t * block
 
 type program =
   | Program of function_defn list * block

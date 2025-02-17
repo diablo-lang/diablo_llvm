@@ -1,11 +1,24 @@
-type diablo_type =
-  | TInt
-  | TBool
-  | TVoid
+module Type = struct
+  type t =
+    | TVar of string
+    | TInt
+    | TBool
+    | TVoid
+    | TFun of t list * t
 
+  let rec to_string = function
+    | TVar v -> v
+    | TInt -> "int"
+    | TBool -> "bool"
+    | TVoid -> "void"
+    | TFun (args, ret) -> Printf.sprintf "(%s -> %s)" (String.concat ", " (List.map to_string args)) (to_string ret)
+end
 
 type param =
-  | Param of string
+  | TParam of Type.t * string
+
+type scheme =
+  | Forall of int list * Type.t
 
 type bin_op =
   | BinOpPlus

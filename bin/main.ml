@@ -1,10 +1,6 @@
-
 open Parsing
-
-let parse (s : string): Parsed_ast.program =
-  let lexbuf = Lexing.from_string s in
-  let program = Parser.program Lexer.read_token lexbuf in
-  program
+open Diablo.Compile
+open Typing
 
 let read_file filename =
   let ic = open_in filename in
@@ -12,7 +8,7 @@ let read_file filename =
   let content = really_input_string ic len in
   close_in ic;
   content
-  
+
 let () =
   try
     (* Check if a filename is provided as the first argument *)
@@ -22,10 +18,10 @@ let () =
     else
       let filename = Sys.argv.(1) in  (* Get the filename from the first argument *)
       let s = read_file filename in   (* Read the entire file contents *)
-      print_endline s;
-      let program = parse s in        (* Parse the content *)
-      print_endline (Pprint_past.pprint_program program)
+      compile s
   with
   | Lexer.SyntaxError msg -> Printf.printf "Lexer error: %s\n" msg
   | Parser.Error -> Printf.printf "Parser error\n"
+  | Hm.TypeError msg -> Printf.printf "Type error: %s\n" msg
+  | Hm.Unify.UnificationError msg -> Printf.printf "Unification error: %s\n" msg
   | _ -> Printf.printf "Unknown error\n"

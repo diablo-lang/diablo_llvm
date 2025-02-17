@@ -11,6 +11,9 @@
 %token RBRACE
 %token LANGLE
 %token RANGLE
+%token RARROW
+%token NEWLINE
+%token RETURN
 %token COMMA
 %token SEMICOLON
 %token EQUAL
@@ -45,15 +48,20 @@
 %%
 
 program:
-    | function_defns=list(function_defn); main=main_expr; EOF { Program(function_defns, main) }
+    | list(NEWLINE); function_defns=list(function_defn); main=main_block; EOF { Program(function_defns, main) }
+    ;
+
+expr_terminator:
+    | t=SEMICOLON { t }
+    | t=NEWLINE { t }
     ;
 
 block:
-    | LBRACE; exprs=separated_list(SEMICOLON, expr); RBRACE { Block(exprs) }
+    | LBRACE; exprs=separated_list_with_optional_trailing_sep(expr_terminator, expr); RBRACE { Block(exprs) }
     ;
 
 expr:
-    | LPAREN; e=expr; RPAREN {e}
+    | LPAREN; e=expr; RPAREN { e }
     | i=INT { Integer i }
     | id=ID { Identifier id }
     | TRUE { Boolean true }
@@ -61,23 +69,39 @@ expr:
     | op=un_op e=expr { UnOp(op, e) }
     | e1=expr op=bin_op e2=expr { BinOp(op, e1, e2) }
     | LET; id=ID; EQUAL; e=expr { Let(id, e) }
-    | IF; cond_expr=expr; then_block=block; ELSE; else_block=block { If(cond_expr, then_block, else_block) }
+    | IF; cond_expr=expr; then_expr=block; ELSE; else_expr=block { If(cond_expr, then_expr, else_expr) }
+    | fn=ID; fn_args=args { Call(fn, fn_args) }
+    | RETURN; e=expr { e }
     ;
 
 param:
-    | name=ID; { Param(name) }
+    | param_type=diablo_type; name=ID; { TParam(param_type, name) }
     ;
 
 params:
     | LPAREN; params=separated_list(COMMA, param); RPAREN { params }
     ;
 
+args:
+    | LPAREN; args=separated_list(COMMA, expr); RPAREN { args }
+
 function_defn:
-    | FUNCTION; name=ID; params=params; body=block; { TFunction(name, params, body) }
+    | FUNCTION; name=ID; params=params; RARROW; return_type=diablo_type; body=block; list(NEWLINE) { TFunction(name, params, return_type, body) }
     ;
 
-main_expr:
-    | MAIN; LPAREN; RPAREN; body=block; { body }
+diablo_type:
+    | TYPE_INT { TInt }
+    | TYPE_BOOL { TBool }
+    | TYPE_VOID { TVoid }
+    ;
+
+main_block:
+    | MAIN; LPAREN; RPAREN; body=block; list(NEWLINE) { body }
+    ;
+
+separated_list_with_optional_trailing_sep(X, Y) :
+    | list(NEWLINE); xs=Y; list(NEWLINE) { xs }
+    | { [] }
     ;
 
 %inline un_op:

@@ -1,7 +1,17 @@
-fn diablo(x, y, z) {
-    1 + 2
+fn foo(int x, int y) -> int {
+    let z = 12 + y
+    if (x > y) {
+        return false
+    } else {
+        return true
+    }
+    let x = 12
+    x
 }
 
+
+
 main() {
-    3 * 4
+    let q = foo(1, 3)
+    let x = foo(1, 3)
 }

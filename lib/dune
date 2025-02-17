@@ -1,3 +1,3 @@
 (library
  (name diablo)
- (libraries parsing))
+ (libraries parsing typing))
