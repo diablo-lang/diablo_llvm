@@ -10,6 +10,8 @@ module TypeEnv = struct
 
   let extend env (x, t) = (x, t) :: env
 
+  let extend_many env bindings = List.fold_left (fun env (x, t) -> extend env (x, t)) env bindings
+
   let find env x =
     try List.assoc x env
     with Not_found -> raise (TypeError ("Unbound variable: " ^ x))
@@ -123,24 +125,23 @@ module Infer = struct
 end
 
 let type_check (Parsed_ast.Program (functions, main_expr)) =
-  (* Build the initial environment with function signatures *)
+  (* Step 1: Collect function signatures first *)
   let env = List.fold_left (fun env (Parsed_ast.TFunction (name, params, return_type, _body)) ->
     let param_types = List.map (fun (TParam (t, _)) -> t) params in
     TypeEnv.extend env (name, Type.TFun (param_types, return_type))
   ) TypeEnv.empty functions in
 
-  (* Verify each function body *)
+  (* Step 2: Now type-check each function body *)
   List.iter (fun (Parsed_ast.TFunction (_name, params, return_type, body)) ->
     let env_with_params = List.fold_left (fun env (TParam (t, param_name)) ->
       TypeEnv.extend env (param_name, t)
     ) env params in
     let _, inferred_return_type = Infer.infer_block env_with_params body in
-    (* Ensure the return type matches *)
     let _ = Unify.unify inferred_return_type return_type in
     ()
   ) functions;
 
-  (* Type check the main expression *)
+  (* Step 3: Type check the main expression now that all functions exist *)
   let _, main_type = Infer.infer_block env main_expr in
   main_type
 
@@ -165,11 +166,27 @@ let type_check (Parsed_ast.Program (functions, main_expr)) =
     let _, block_type = Infer.infer_block env (Parsed_ast.Block exprs) in
     Typed_ast.Block (block_type, List.map (annotate_expr env) exprs)
   
-  let annotate_function (Parsed_ast.TFunction (name, params, return_type, body)) =
-    let param_env = List.map (fun (Ast.Ast_types.TParam (t, p)) -> (p, t)) params in
-    Typed_ast.TFunction (name, params, return_type, annotate_block param_env body)
+  let annotate_function env (Parsed_ast.TFunction (name, params, return_type, body)) =
+    let param_types = List.map (fun (Ast.Ast_types.TParam (t, _)) -> t) params in
+    let env = TypeEnv.extend_many env (List.combine (List.map (fun (Ast.Ast_types.TParam (_, p)) -> p) params) param_types) in
+    let typed_body = annotate_block env body in
+    Typed_ast.TFunction (name, params, return_type, typed_body)
   
   let convert_to_typed_ast (Parsed_ast.Program (functions, main_block)) =
-    let typed_functions = List.map annotate_function functions in
-    let typed_main = annotate_block TypeEnv.empty main_block in
-    Typed_ast.Program (typed_functions, typed_main)
+  (* First, register function signatures in the environment *)
+  let env =
+    List.fold_left (fun env (Parsed_ast.TFunction (name, params, return_type, _)) ->
+      let param_types = List.map (fun (TParam (t, _)) -> t) params in
+      TypeEnv.extend env (name, Type.TFun (param_types, return_type))
+    ) TypeEnv.empty functions
+  in
+
+  (* Then, annotate each function *)
+  let typed_functions =
+    List.map (fun f -> annotate_function env f) functions
+  in
+
+  (* Finally, annotate the main block *)
+  let typed_main_block = annotate_block env main_block in
+
+  Typed_ast.Program (typed_functions, typed_main_block)

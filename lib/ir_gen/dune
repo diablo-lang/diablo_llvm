@@ -1,0 +1,3 @@
+(library
+ (name ir_gen)
+ (libraries llvm llvm.analysis typing))

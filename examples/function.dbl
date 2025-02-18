@@ -1,14 +1,8 @@
 fn foo(int x, int y) -> int {
-    let z = 12 + y;
-    if (x > y) {
-        return false
-    } else {
-        return true
-    };
-    let x = 12;
-    x
+    let z = x + y;
+    z + 1
 }
 
 main() {
-    1 + 2
+    foo(12, 12)
 }
