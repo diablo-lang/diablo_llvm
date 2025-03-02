@@ -13,6 +13,8 @@ let () =
     (* No filename provided, so print an error and exit *)
     Printf.printf "Error: Please provide a filename as the first argument.\n"
   else
-    let filename = Sys.argv.(1) in  (* Get the filename from the first argument *)
-    let s = read_file filename in   (* Read the entire file contents *)
+    let filename = Sys.argv.(1) in
+    (* Get the filename from the first argument *)
+    let s = read_file filename in
+    (* Read the entire file contents *)
     compile s

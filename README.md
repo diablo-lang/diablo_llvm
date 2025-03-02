@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="https://diablo-lang.org" target="_blank"><img src="./img/logo.png" width="250" /></a>
+  <a href="https://diablo-lang.org" target="_blank"><img src="https://diablo-lang.org/img/logo.png" width="250" /></a>
 
   <h1>Diablo</h1>
 
@@ -77,13 +77,25 @@ Generate executable from LLVM IR linked with a specified library.
 clang -target x86_64-pc-linux-gnu llvm_bin/output.ll -o llvm_bin/output -L. -lsocket -Wl,-rpath=.
 ```
 
+Format all OCaml and dune files.
+
+```sh
+opam exec -- dune fmt
+```
+
+Lint opam file(s).
+
+```sh
+opam lint
+```
+
 ## Contributing
 
 TBD - Not open for contributions at this time until alpha version is implemented.
 
 ## License
 
-TBD
+Diablo source code is released under the [Apache License 2.0](./LICENSE).
 
 ## Resources
 

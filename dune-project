@@ -8,11 +8,11 @@
 (source
  (github diablo-lang/diablo_llvm))
 
-(authors "Author Name")
+(authors "Mason Moreland")
 
-(maintainers "Maintainer Name")
+(maintainers "Mason Moreland")
 
-(license LICENSE)
+(license "Apache-2.0")
 
 (documentation https://diablo-lang.org)
 
@@ -20,7 +20,7 @@
  (name diablo)
  (synopsis "The Diablo Programming Language")
  (description "Diablo is a statically typed, functional language designed to augment research in information security and the natural sciences.")
- (depends ocaml dune alcotest llvm menhir)
+ (depends ocaml dune llvm menhir (alcotest :with_test) (ocamlformat :dev))
  (tags
   (functional "programming language" compiler interpreter)))
 

@@ -22,11 +22,11 @@ let compile (s : string) =
     print_endline (Pprint_past.pprint_program resolved_ast);
 
     print_endline "[*] Typechecking...";
+
     (* let program_type = Hm.type_check resolved_ast in *)
     (* let typed_ast = Hm.convert_to_typed_ast resolved_ast in *)
     (* print_endline (Pprint_tast.pprint_program typed_ast); *)
     (* print_endline (Pprint_tast.pprint_type program_type); *)
-
     print_endline "[*] Desugaring...";
 
     print_endline "[*] Lowering to LLVM IR...";
@@ -34,9 +34,11 @@ let compile (s : string) =
     Llvm_ir_gen.Codegen.dump_ir ();
     Llvm_ir_gen.Codegen.save_ir_to_file "llvm_bin/output.ll";
 
-    print_endline "[*] Done!";
+    print_endline "[*] Done!"
   with
-  | Lexer.SyntaxError msg -> Printf.eprintf "Lexer error at %s: %s\n" (print_position lexbuf) msg
-  | Parser.Error -> Printf.eprintf "Parser error at %s\n" (print_position lexbuf) 
+  | Lexer.SyntaxError msg ->
+      Printf.eprintf "Lexer error at %s: %s\n" (print_position lexbuf) msg
+  | Parser.Error ->
+      Printf.eprintf "Parser error at %s\n" (print_position lexbuf)
   | Hm.TypeError msg -> Printf.eprintf "Type error at: %s\n" msg
   | Llvm_ir_gen.Codegen.LLVMError msg -> Printf.eprintf "LLVM error: %s\n" msg

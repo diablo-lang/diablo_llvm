@@ -3,9 +3,9 @@ opam-version: "2.0"
 synopsis: "The Diablo Programming Language"
 description:
   "Diablo is a statically typed, functional language designed to augment research in information security and the natural sciences."
-maintainer: ["Maintainer Name"]
-authors: ["Author Name"]
-license: "LICENSE"
+maintainer: ["Mason Moreland"]
+authors: ["Mason Moreland"]
+license: "Apache-2.0"
 tags: ["functional" "programming language" "compiler" "interpreter"]
 homepage: "https://github.com/diablo-lang/diablo_llvm"
 doc: "https://diablo-lang.org"
@@ -13,9 +13,10 @@ bug-reports: "https://github.com/diablo-lang/diablo_llvm/issues"
 depends: [
   "ocaml"
   "dune" {>= "3.17"}
-  "alcotest"
   "llvm"
   "menhir"
+  "alcotest" {with_test}
+  "ocamlformat" {dev}
   "odoc" {with-doc}
 ]
 build: [

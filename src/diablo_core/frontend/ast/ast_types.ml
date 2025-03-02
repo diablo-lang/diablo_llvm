@@ -13,14 +13,14 @@ module Type = struct
     | TBool -> "bool"
     | TString -> "string"
     | TVoid -> "void"
-    | TFun (args, ret) -> Printf.sprintf "(%s -> %s)" (String.concat ", " (List.map to_string args)) (to_string ret)
+    | TFun (args, ret) ->
+        Printf.sprintf "(%s -> %s)"
+          (String.concat ", " (List.map to_string args))
+          (to_string ret)
 end
 
-type param =
-  | TParam of Type.t * string
-
-type scheme =
-  | Forall of int list * Type.t
+type param = TParam of Type.t * string
+type scheme = Forall of int list * Type.t
 
 type bin_op =
   | BinOpPlus
@@ -37,6 +37,4 @@ type bin_op =
   | BinOpEqual
   | BinOpNotEqual
 
-type un_op =
-  | UnOpNot
-  | UnOpNegate
+type un_op = UnOpNot | UnOpNegate
