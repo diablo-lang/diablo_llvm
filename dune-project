@@ -20,7 +20,7 @@
  (name diablo)
  (synopsis "The Diablo Programming Language")
  (description "Diablo is a statically typed, functional language designed to augment research in information security and the natural sciences.")
- (depends ocaml dune llvm menhir (alcotest :with_test) (ocamlformat :dev))
+ (depends ocaml dune llvm menhir (alcotest :with-test) (ocamlformat :dev))
  (tags
   (functional "programming language" compiler interpreter)))
 
