@@ -1,0 +1,5 @@
+import net;
+
+main() {
+    xadd(12, 13)
+}

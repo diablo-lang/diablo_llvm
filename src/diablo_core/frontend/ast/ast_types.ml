@@ -3,6 +3,7 @@ module Type = struct
     | TVar of string
     | TInt
     | TBool
+    | TString
     | TVoid
     | TFun of t list * t
 
@@ -10,6 +11,7 @@ module Type = struct
     | TVar v -> v
     | TInt -> "int"
     | TBool -> "bool"
+    | TString -> "string"
     | TVoid -> "void"
     | TFun (args, ret) -> Printf.sprintf "(%s -> %s)" (String.concat ", " (List.map to_string args)) (to_string ret)
 end

@@ -5,6 +5,7 @@
 
 %token <int> INT
 %token <string> ID
+%token <string> STRING_LITERAL
 %token LPAREN
 %token RPAREN
 %token LBRACE
@@ -34,6 +35,9 @@
 %token IF
 %token ELSE
 %token MAIN
+%token MODULE
+%token IMPORT
+%token EXTERN
 %token EOF
 
 %right EQUAL
@@ -47,7 +51,20 @@
 %%
 
 program:
-    | function_defns=list(function_defn); main=main_block; EOF { Program(function_defns, main) }
+    | imports=list(import_stmt); functions=list(function_defn); main=main_block; EOF { Program(imports, functions, main) }
+    | imports=list(import_stmt); functions=list(function_defn); EOF { Program(imports, functions, Block []) }
+    ;
+
+import_stmt:
+    | IMPORT; module_name=ID; SEMICOLON { Import(module_name) }
+    ;
+
+function_defn:
+    | FUNCTION; name=ID; params=params; RARROW; return_type=diablo_type; body=block { TFunction(name, params, return_type, body) }
+    ;
+
+module_defn:
+    | MODULE; name=ID; LBRACE; functions=list(function_defn); RBRACE { Module(name, functions) }
     ;
 
 block:
@@ -60,11 +77,13 @@ expr:
     | id=ID { Identifier id }
     | TRUE { Boolean true }
     | FALSE { Boolean false }
+    | s=STRING_LITERAL { StringLiteral s }
     | op=un_op e=expr { UnOp(op, e) }
     | e1=expr op=bin_op e2=expr { BinOp(op, e1, e2) }
     | LET; id=ID; EQUAL; e=expr { Let(id, e) }
     | IF; cond_expr=expr; then_expr=block; ELSE; else_expr=block { If(cond_expr, then_expr, else_expr) }
     | fn=ID; fn_args=args { Call(fn, fn_args) }
+    | EXTERN; fn=ID; fn_args=args { ExternCall(fn, fn_args) }
     | RETURN; e=expr { e }
     ;
 
@@ -78,10 +97,6 @@ params:
 
 args:
     | LPAREN; args=separated_list(COMMA, expr); RPAREN { args }
-
-function_defn:
-    | FUNCTION; name=ID; params=params; RARROW; return_type=diablo_type; body=block { TFunction(name, params, return_type, body) }
-    ;
 
 diablo_type:
     | TYPE_INT { TInt }

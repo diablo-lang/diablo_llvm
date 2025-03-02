@@ -1,0 +1,8 @@
+import socket;
+
+main() {
+    let sock = xcreate_socket();
+    xbind_socket(sock);
+    xlisten_socket(sock);
+    1
+}

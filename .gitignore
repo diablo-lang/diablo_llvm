@@ -27,3 +27,9 @@ setup.log
 
 # Local OPAM switch
 _opam/
+
+# LLVM generated files
+llvm_bin/
+
+# Dynamically linked libraries
+*.so

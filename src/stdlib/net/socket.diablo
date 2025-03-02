@@ -1,0 +1,7 @@
+fn xadd(int a, int b) -> int {
+    extern ext_add(a, b)
+}
+
+main() {
+    1
+}

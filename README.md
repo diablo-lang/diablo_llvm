@@ -16,7 +16,6 @@
 
 Diablo is a statically typed, functional language designed to augment research in information security and the natural sciences.
 
-
 The compiler is written in OCaml and uses LLVM as its backend.
 
 It features an intuitive syntax that allows for rapidly developing prototypes:
@@ -50,6 +49,32 @@ id ::= <identifiers>                               -- identifier names (immutabl
 int ::= <integers>                                 -- integer values
 
 bool ::= true | false                              -- boolean values
+```
+
+### Building
+
+Build source.
+
+```sh
+dune build
+```
+
+Compile and dump LLVM IR to `llvm_bin/output.ll`.
+
+```sh
+dune exec -- diablo examples/example.dbl
+```
+
+Compile dynamically linked C library.
+
+```sh
+gcc -shared -fPIC -o libsocket.so socket.c
+```
+
+Generate executable from LLVM IR linked with a specified library.
+
+```sh
+clang -target x86_64-pc-linux-gnu llvm_bin/output.ll -o llvm_bin/output -L. -lsocket -Wl,-rpath=.
 ```
 
 ## Contributing

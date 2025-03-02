@@ -6,6 +6,7 @@ module Codegen = struct
   exception LLVMError of string
   let context = global_context ()
   let diablo_module = create_module context "diablo_module"
+  
   let builder = builder context
   let named_values: (string, llvalue) Hashtbl.t = Hashtbl.create 10
 
@@ -17,10 +18,19 @@ module Codegen = struct
     | Type.TBool -> bool_type
     | _ -> raise (LLVMError "Unsupported type")
 
+  
+  let declare_extern_function name return_type param_types diablo_module =
+    declare_function name (function_type (llvm_type return_type) (Array.of_list (List.map llvm_type param_types))) diablo_module
+
 
   let rec codegen_expr = function
   | Parsed_ast.Integer n -> const_int int_type n
   | Parsed_ast.Boolean b -> const_int bool_type (if b then 1 else 0)
+  | Parsed_ast.StringLiteral s ->
+    let llvm_string = const_stringz context s in
+    let name = "str" ^ string_of_int (Hashtbl.hash s) in
+    let global_string = define_global name llvm_string diablo_module in
+    global_string
   | Parsed_ast.Identifier name ->
     (try Hashtbl.find named_values name with
     | Not_found -> raise (LLVMError ("Unknown variable: " ^ name)))
@@ -69,6 +79,15 @@ module Codegen = struct
     let expr_val = codegen_expr expr in
     Hashtbl.add named_values name expr_val;
     expr_val
+  | Parsed_ast.ExternCall (name, args) ->
+    let callee =
+      match lookup_function name diablo_module with
+      | Some callee -> callee
+      | None -> raise (LLVMError ("Unknown function referenced: " ^ name))
+    in
+    let args = Array.map codegen_expr (Array.of_list args) in
+    let ft = function_type (llvm_type Type.TInt) (Array.make (Array.length args) (llvm_type Type.TInt)) in
+    build_call ft callee args "calltmp" builder
   | _ -> raise (LLVMError "Unknown expression")
 
   (* ?: Look at note about append_block below *)
@@ -120,7 +139,6 @@ module Codegen = struct
       delete_function the_function;
       raise (LLVMError (Printexc.to_string e))
 
-
   (* Handling the special case for the main function *)
   let codegen_main (body: Parsed_ast.block) =
     (* Create a new function type for main: i32 @main() *)
@@ -147,29 +165,13 @@ module Codegen = struct
       delete_function main_func;
       raise (LLVMError (Printexc.to_string e))
 
-    
-  let rec string_of_block = function
-    | Parsed_ast.Block exprs ->
-      List.fold_left (fun acc expr -> acc ^ (string_of_expr expr) ^ "\n") "" exprs
-    
-    and string_of_expr = function
-    | Parsed_ast.Integer n -> string_of_int n
-    | Parsed_ast.Boolean b -> string_of_bool b
-    | Parsed_ast.Identifier s -> s
-    | Parsed_ast.BinOp (_op, lhs, rhs) ->
-      Printf.sprintf "(%s %s)" (string_of_expr lhs) (string_of_expr rhs)
-    | Parsed_ast.UnOp (_op, expr) ->
-      Printf.sprintf "(%s)" (string_of_expr expr)
-    | Parsed_ast.Let (name, expr) ->
-      Printf.sprintf "let %s = %s" name (string_of_expr expr)
-    | Parsed_ast.If (cond, then_branch, else_branch) ->
-      Printf.sprintf "if %s then %s else %s" (string_of_expr cond) (string_of_block then_branch) (string_of_block else_branch)
-    | Parsed_ast.Call (callee, args) ->
-      Printf.sprintf "%s(%s)" callee (String.concat ", " (List.map string_of_expr args))
-    
-
   let codegen_program = function
-  | Parsed_ast.Program (funcs, main_block) ->
+  | Parsed_ast.Program (_import_stms, funcs, main_block) ->
+    Printf.printf "Compiling %d functions\n" (List.length funcs);
+    let _ = declare_extern_function "ext_add" Type.TInt [Type.TInt; Type.TInt] diablo_module in
+    let _ = declare_extern_function "create_socket" Type.TInt [] diablo_module in
+    let _ = declare_extern_function "bind_socket" Type.TInt [Type.TInt] diablo_module in
+    let _ = declare_extern_function "listen_socket" Type.TInt [Type.TInt] diablo_module in
     List.iter (fun func -> ignore (codegen_function func)) funcs;
     ignore (codegen_main main_block)
  

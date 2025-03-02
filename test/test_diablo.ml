@@ -9,7 +9,7 @@ let print_typed_ast ast =
 
 (* Test case 1: Simple integer expression *)
 let test_integer_expr () =
-  let parsed_ast = Parsed_ast.Program ([], Parsed_ast.Block [Parsed_ast.Integer 42]) in
+  let parsed_ast = Parsed_ast.Program ([], [], Parsed_ast.Block [Parsed_ast.Integer 42]) in
   let typed_ast = Hm.convert_to_typed_ast parsed_ast in
   Alcotest.(check string) "Integer type check" "Program return type: int" (print_typed_ast typed_ast)
 
@@ -17,6 +17,7 @@ let test_integer_expr () =
 let test_function () =
   let parsed_ast =
     Parsed_ast.Program (
+      [],
       [Parsed_ast.TFunction ("add", [TParam (Type.TInt, "x"); TParam (Type.TInt, "y")], Type.TInt,
         Parsed_ast.Block [Parsed_ast.BinOp (BinOpPlus, Parsed_ast.Identifier "x", Parsed_ast.Identifier "y")])],
       Parsed_ast.Block []
@@ -29,6 +30,7 @@ let test_function () =
 let test_if () =
   let parsed_ast =
     Parsed_ast.Program (
+      [],
       [],
       Parsed_ast.Block [Parsed_ast.If (Parsed_ast.Boolean true, Parsed_ast.Block [], Parsed_ast.Block [])]
     )

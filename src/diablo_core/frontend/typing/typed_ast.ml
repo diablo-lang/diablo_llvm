@@ -4,6 +4,7 @@ type expr =
   | Identifier  of string
   | Integer     of int
   | Boolean     of bool
+  | StringLiteral of string
   | UnOp        of Type.t *  un_op * expr
   | BinOp       of Type.t *  bin_op * expr * expr
   | Let         of Type.t * string * expr

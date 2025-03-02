@@ -34,6 +34,7 @@ and pprint_expr expr =
   | Identifier s -> s
   | Integer i -> string_of_int i
   | Boolean b -> string_of_bool b
+  | StringLiteral s -> Printf.sprintf "\"%s\"" s
   | UnOp (t, op, e) -> Printf.sprintf "(%s %s %s)" (pprint_type t) (pprint_un_op op) (pprint_expr e)
   | BinOp (t, op, e1, e2) -> Printf.sprintf "(%s %s %s %s)" (pprint_type t) (pprint_bin_op op) (pprint_expr e1) (pprint_expr e2)
   | Let (t, x, e) -> Printf.sprintf "(%s %s = %s)" (pprint_type t) x (pprint_expr e)

@@ -13,6 +13,8 @@ let integer = '-'? digit+
 let newline = '\r' | '\n' | "\r\n"
 let whitespace = [' ' '\t']+
 
+let string_literal = "\"" (('\"' | '\\' | ['\x20'-'\x7e'])*) "\"" 
+
 rule read_token =
     parse
     | "(" { LPAREN }
@@ -44,6 +46,10 @@ rule read_token =
     | "if" { IF }
     | "else" { ELSE }
     | "main" { MAIN }
+    | "module" { MODULE }
+    | "import" { IMPORT }
+    | "extern" { EXTERN }
+    | string_literal { STRING_LITERAL (Lexing.lexeme lexbuf) }
     | whitespace { read_token lexbuf }
     | "#" { read_comment lexbuf }
     | integer { INT (int_of_string (Lexing.lexeme lexbuf)) }

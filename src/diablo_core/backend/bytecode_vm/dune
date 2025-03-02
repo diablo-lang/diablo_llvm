@@ -1,0 +1,3 @@
+(library
+ (name bytecode_vm)
+ (libraries ast parsing))
