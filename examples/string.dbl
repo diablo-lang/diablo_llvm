@@ -1,3 +1,9 @@
+fn call() -> int {
+    "world";
+    return 0
+}
+
 main() {
-    "hello world"
+    call();
+    return 0
 }

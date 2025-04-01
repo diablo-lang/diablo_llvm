@@ -22,17 +22,17 @@ let compile (s : string) =
     print_endline (Pprint_past.pprint_program resolved_ast);
 
     print_endline "[*] Typechecking...";
+    let program_type = Hm.type_check resolved_ast in
+    let typed_ast = Hm.convert_to_typed_ast resolved_ast in
+    print_endline (Pprint_tast.pprint_program typed_ast);
+    print_endline (Pprint_tast.pprint_type program_type);
 
-    (* let program_type = Hm.type_check resolved_ast in *)
-    (* let typed_ast = Hm.convert_to_typed_ast resolved_ast in *)
-    (* print_endline (Pprint_tast.pprint_program typed_ast); *)
-    (* print_endline (Pprint_tast.pprint_type program_type); *)
     print_endline "[*] Desugaring...";
 
     print_endline "[*] Lowering to LLVM IR...";
     Llvm_ir_gen.Codegen.codegen_program resolved_ast;
-    Llvm_ir_gen.Codegen.dump_ir ();
-    Llvm_ir_gen.Codegen.save_ir_to_file "llvm_bin/output.ll";
+    Llvm_ir_gen.Codegen.print_module_to_stderr ();
+    Llvm_ir_gen.Codegen.save_module_to_file "llvm_bin/output.ll";
 
     print_endline "[*] Done!"
   with

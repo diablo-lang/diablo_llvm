@@ -6,15 +6,18 @@ module Codegen = struct
   exception LLVMError of string
 
   let context = global_context ()
-  let diablo_module = create_module context "diablo_module"
+  let diablo_module = create_module context "DiabloModule"
   let builder = builder context
   let named_values : (string, llvalue) Hashtbl.t = Hashtbl.create 10
-  let int_type = i32_type context
-  let bool_type = i1_type context
+  let i32_t = i32_type context
+  let i1_t = i1_type context
+
+  let i8_t = i8_type context
+  let ptr_t = array_type i8_t 1
 
   let llvm_type = function
-    | Type.TInt -> int_type
-    | Type.TBool -> bool_type
+    | Type.TInt -> i32_t
+    | Type.TBool -> i1_t
     | _ -> raise (LLVMError "Unsupported type")
 
   let declare_extern_function name return_type param_types diablo_module =
@@ -24,13 +27,10 @@ module Codegen = struct
       diablo_module
 
   let rec codegen_expr = function
-    | Parsed_ast.Integer n -> const_int int_type n
-    | Parsed_ast.Boolean b -> const_int bool_type (if b then 1 else 0)
+    | Parsed_ast.Integer n -> const_int i32_t n
+    | Parsed_ast.Boolean b -> const_int i1_t (if b then 1 else 0)
     | Parsed_ast.StringLiteral s ->
-        let llvm_string = const_stringz context s in
-        let name = "str" ^ string_of_int (Hashtbl.hash s) in
-        let global_string = define_global name llvm_string diablo_module in
-        global_string
+        build_global_stringptr s "str" builder
     | Parsed_ast.Identifier name -> (
         try Hashtbl.find named_values name
         with Not_found -> raise (LLVMError ("Unknown variable: " ^ name)))
@@ -74,11 +74,11 @@ module Codegen = struct
                ^ string_of_int (Array.length params)
                ^ " arguments, got "
                ^ string_of_int (List.length args)));
-        let args = Array.map codegen_expr (Array.of_list args) in
+        let args = Array.of_list (List.map codegen_expr args) in
         (* TODO: Set the function type to the type of the callee *)
         (* ?: Maybe this should use previously inferred types *)
         (* let ft = function_type (return_type (type_of callee)) (param_types (type_of callee)) in *)
-        let ft =
+        let ft = 
           function_type (llvm_type Type.TInt)
             (Array.make (Array.length args) (llvm_type Type.TInt))
         in
@@ -103,10 +103,10 @@ module Codegen = struct
 
   (* ?: Look at note about append_block below *)
   let codegen_block = function
+    (* If the block is empty, return a void value for the function's return type. *)
     | Parsed_ast.Block [] ->
-        (* If the block is empty, return a null value for the function's return type. *)
-        build_ret (const_null (llvm_type Type.TVoid)) builder
-        (* If the block is not empty, return the last expression. *)
+        build_ret_void builder
+    (* If the block is not empty, return the last expression. *)
     | Parsed_ast.Block exprs ->
         List.fold_left
           (fun _ expr -> codegen_expr expr)
@@ -185,31 +185,23 @@ module Codegen = struct
       delete_function main_func;
       raise (LLVMError (Printexc.to_string e))
 
+  let declare_extern_functions () =
+    Hashtbl.add named_values "ext_add" (declare_extern_function "ext_add" Type.TInt [ Type.TInt; Type.TInt ] diablo_module);
+    let printf_ty = var_arg_function_type i32_t [| pointer_type (type_context i8_t) |] in
+    let printf = declare_function "printf" printf_ty diablo_module in
+    Hashtbl.add named_values "printf" printf
+
   let codegen_program = function
     | Parsed_ast.Program (_import_stms, funcs, main_block) ->
         Printf.printf "Compiling %d functions\n" (List.length funcs);
-        let _ =
-          declare_extern_function "ext_add" Type.TInt [ Type.TInt; Type.TInt ]
-            diablo_module
-        in
-        let _ =
-          declare_extern_function "create_socket" Type.TInt [] diablo_module
-        in
-        let _ =
-          declare_extern_function "bind_socket" Type.TInt [ Type.TInt ]
-            diablo_module
-        in
-        let _ =
-          declare_extern_function "listen_socket" Type.TInt [ Type.TInt ]
-            diablo_module
-        in
+        declare_extern_functions ();
+
         List.iter (fun func -> ignore (codegen_function func)) funcs;
         ignore (codegen_main main_block)
 
-  let dump_ir () = dump_module diablo_module
+  let print_module_to_stderr () =
+    dump_module diablo_module
 
-  let save_ir_to_file filename =
-    let oc = open_out filename in
-    output_string oc (Llvm.string_of_llmodule diablo_module);
-    close_out oc
+  let save_module_to_file filename =
+    print_module filename diablo_module
 end

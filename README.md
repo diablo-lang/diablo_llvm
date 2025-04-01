@@ -74,7 +74,11 @@ gcc -shared -fPIC -o libsocket.so socket.c
 Generate executable from LLVM IR linked with a specified library.
 
 ```sh
-clang -target x86_64-pc-linux-gnu llvm_bin/output.ll -o llvm_bin/output -L. -lsocket -Wl,-rpath=.
+clang-19 -target x86_64-pc-linux-gnu llvm_bin/output.ll -o llvm_bin/output -L. -lsocket -Wl,-rpath=.
+```
+
+```sh
+clang-19 -target x86_64-pc-linux-gnu llvm_bin/output.ll -o llvm_bin/output -lc -Wl,-rpath=.
 ```
 
 Format all OCaml and dune files.
