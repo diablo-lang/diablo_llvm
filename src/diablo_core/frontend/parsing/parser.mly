@@ -29,6 +29,7 @@
 %token TYPE_INT
 %token TYPE_BOOL
 %token TYPE_VOID
+%token TYPE_STRING
 %token TRUE
 %token FALSE
 %token FUNCTION
@@ -102,6 +103,7 @@ diablo_type:
     | TYPE_INT { TInt }
     | TYPE_BOOL { TBool }
     | TYPE_VOID { TVoid }
+    | TYPE_STRING { TString }
     ;
 
 main_block:

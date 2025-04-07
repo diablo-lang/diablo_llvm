@@ -1,9 +1,15 @@
-fn call() -> int {
+fn call(int hello, bool world) -> int {
     "world";
     return 0
 }
 
+fn void_call(str hello) -> int {
+    let res = 1 + 2;
+    return res
+}
+
 main() {
-    call();
+    call(32, true);
+    void_call("hi");
     return 0
 }

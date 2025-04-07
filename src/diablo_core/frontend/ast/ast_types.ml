@@ -11,7 +11,7 @@ module Type = struct
     | TVar v -> v
     | TInt -> "int"
     | TBool -> "bool"
-    | TString -> "string"
+    | TString -> "str"
     | TVoid -> "void"
     | TFun (args, ret) ->
         Printf.sprintf "(%s -> %s)"

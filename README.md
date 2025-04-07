@@ -29,6 +29,86 @@ fn hello_world() {
 
 Refer to the [getting started guide](https://diablo-lang.org/guides/getting-started) to get up and running quickly. Also, check out the official [style guide](https://diablo-lang.org/guides/style-guide) for best practices.
 
+### Language Constructs
+
+```
+# Modules
+module Math {
+  # Let expression in Math namespace
+  pi = 3.14
+
+  # Function expression
+  fn add(a: int, b: int) -> int {
+    return a + b
+  }
+}
+
+# Import statement (doesn't return anything)
+import Math
+
+# Type declaration
+type Person = {
+  name: str,
+  age: int
+}
+
+# Create Person record
+p = Person("Foo", 42)
+
+# Let expression
+x = 12
+y = Math.add(x, Math.pi)
+b = y >= x
+
+# List of values (all same type)
+l = [1, 2, 3, Math.pi, x, y]
+bl = [b, true, false]
+
+# Function expression
+fn foo (x: bool, y: str) -> int {
+  z = 12 + 32
+  # Return last expression (writing "return" is optional)
+  z + 12
+}
+
+# Function with unit (nil) return type
+# Maybe make "impure fn" since it has side effect
+fn out (msg: str) -> nil {
+  combined_msg = concat("hello", msg)
+  print(combined_msg)
+}
+
+# Lambda
+a = lambda (x: int) -> int { x + 24 }
+
+# Application
+b = 12 + a(12)
+
+# Conditional expression
+c = 3 + (if 5 == 6 then 10 else 100)
+
+# Pattern matching
+fn is_zero(x: int) -> bool {
+  match x {
+    0 -> true
+    _ -> false
+  }
+}
+
+# Recursion
+fn factorial(n: int) -> int {
+  if n == 0 then 1 else n * factorial(n - 1)
+}
+
+# Polymorphic Types (Generics)
+fn map<T>(fn f: T -> T, list: List<T>) -> List<T> {
+  match list {
+    [] -> []
+    x:xs -> f(x) : map(f, xs)
+  }
+}
+```
+
 ### BNF Grammar
 
 ```

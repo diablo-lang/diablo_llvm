@@ -1,3 +1,3 @@
 (library
  (name ir_gen)
- (libraries llvm llvm.analysis ast parsing))
+ (libraries llvm llvm.analysis ast typing))

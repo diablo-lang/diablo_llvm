@@ -4,7 +4,7 @@ open Typing
 
 let print_typed_ast ast =
   match ast with
-  | Typed_ast.Program (_funcs, Typed_ast.Block (ty, _)) ->
+  | Typed_ast.Program (_import_stms, _funcs, Typed_ast.Block (ty, _)) ->
       Printf.sprintf "Program return type: %s" (Type.to_string ty)
 
 (* Test case 1: Simple integer expression *)

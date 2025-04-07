@@ -41,6 +41,7 @@ rule read_token =
     | "int" { TYPE_INT }
     | "bool" { TYPE_BOOL }
     | "void" { TYPE_VOID }
+    | "str" { TYPE_STRING }
     | "true" { TRUE }
     | "false" { FALSE }
     | "if" { IF }

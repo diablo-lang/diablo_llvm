@@ -1,6 +1,6 @@
 open Llvm
 open Ast.Ast_types
-open Parsing
+open Typing
 
 module Codegen = struct
   exception LLVMError of string
@@ -13,11 +13,14 @@ module Codegen = struct
   let i1_t = i1_type context
 
   let i8_t = i8_type context
-  let ptr_t = array_type i8_t 1
+
+  let void_t = void_type context
 
   let llvm_type = function
     | Type.TInt -> i32_t
     | Type.TBool -> i1_t
+    | Type.TVoid -> void_type context
+    | Type.TString -> pointer_type context
     | _ -> raise (LLVMError "Unsupported type")
 
   let declare_extern_function name return_type param_types diablo_module =
@@ -27,14 +30,14 @@ module Codegen = struct
       diablo_module
 
   let rec codegen_expr = function
-    | Parsed_ast.Integer n -> const_int i32_t n
-    | Parsed_ast.Boolean b -> const_int i1_t (if b then 1 else 0)
-    | Parsed_ast.StringLiteral s ->
+    | Typed_ast.Integer n -> const_int i32_t n
+    | Typed_ast.Boolean b -> const_int i1_t (if b then 1 else 0)
+    | Typed_ast.StringLiteral s ->
         build_global_stringptr s "str" builder
-    | Parsed_ast.Identifier name -> (
+    | Typed_ast.Identifier name -> (
         try Hashtbl.find named_values name
         with Not_found -> raise (LLVMError ("Unknown variable: " ^ name)))
-    | Parsed_ast.BinOp (op, lhs, rhs) -> (
+    | Typed_ast.BinOp (_, op, lhs, rhs) -> (
         let lhs_val = codegen_expr lhs in
         let rhs_val = codegen_expr rhs in
         match op with
@@ -54,12 +57,12 @@ module Codegen = struct
         | BinOpOr -> build_or lhs_val rhs_val "ortmp" builder
         | BinOpEqual -> build_icmp Icmp.Eq lhs_val rhs_val "eqtmp" builder
         | BinOpNotEqual -> build_icmp Icmp.Ne lhs_val rhs_val "netmp" builder)
-    | Parsed_ast.UnOp (op, expr) -> (
+    | Typed_ast.UnOp (_, op, expr) -> (
         let expr_val = codegen_expr expr in
         match op with
         | UnOpNegate -> build_neg expr_val "negtmp" builder
         | UnOpNot -> build_not expr_val "nottmp" builder)
-    | Parsed_ast.Call (callee, args) ->
+    | Typed_ast.Call (ret_type, callee, args) ->
         let callee =
           match lookup_function callee diablo_module with
           | Some callee -> callee
@@ -74,20 +77,27 @@ module Codegen = struct
                ^ string_of_int (Array.length params)
                ^ " arguments, got "
                ^ string_of_int (List.length args)));
-        let args = Array.of_list (List.map codegen_expr args) in
+        let arr_args = Array.of_list (List.map codegen_expr args) in
         (* TODO: Set the function type to the type of the callee *)
         (* ?: Maybe this should use previously inferred types *)
+
+        let ret_type = llvm_type ret_type in
+        let arg_types = Array.of_list (List.map (fun arg -> 
+          match arg with 
+          | Typed_ast.Integer _ -> llvm_type Type.TInt
+          | Typed_ast.Boolean _ -> llvm_type Type.TBool
+          | Typed_ast.StringLiteral _ -> llvm_type Type.TString
+          | _ -> raise (LLVMError "Unsupported type")
+        ) args) in
+        let fnty = function_type ret_type arg_types in
+
         (* let ft = function_type (return_type (type_of callee)) (param_types (type_of callee)) in *)
-        let ft = 
-          function_type (llvm_type Type.TInt)
-            (Array.make (Array.length args) (llvm_type Type.TInt))
-        in
-        build_call ft callee args "calltmp" builder
-    | Parsed_ast.Let (name, expr) ->
+        build_call fnty callee arr_args "calltmp" builder
+    | Typed_ast.Let (_, name, expr) ->
         let expr_val = codegen_expr expr in
         Hashtbl.add named_values name expr_val;
         expr_val
-    | Parsed_ast.ExternCall (name, args) ->
+    | Typed_ast.ExternCall (_, name, args) ->
         let callee =
           match lookup_function name diablo_module with
           | Some callee -> callee
@@ -104,17 +114,17 @@ module Codegen = struct
   (* ?: Look at note about append_block below *)
   let codegen_block = function
     (* If the block is empty, return a void value for the function's return type. *)
-    | Parsed_ast.Block [] ->
+    | Typed_ast.Block (_, []) ->
         build_ret_void builder
     (* If the block is not empty, return the last expression. *)
-    | Parsed_ast.Block exprs ->
+    | Typed_ast.Block (_, exprs) ->
         List.fold_left
           (fun _ expr -> codegen_expr expr)
           (const_null (i32_type context))
           exprs
 
   let codegen_function = function
-    | Parsed_ast.TFunction (name, params, return_type, body) -> (
+    | Typed_ast.TFunction (name, params, return_type, body) -> (
         Hashtbl.clear named_values;
 
         let param_types =
@@ -158,7 +168,7 @@ module Codegen = struct
           raise (LLVMError (Printexc.to_string e)))
 
   (* Handling the special case for the main function *)
-  let codegen_main (body : Parsed_ast.block) =
+  let codegen_main (body : Typed_ast.block) =
     (* Create a new function type for main: i32 @main() *)
     let main_type =
       function_type (llvm_type Type.TInt) (Array.make 0 (llvm_type Type.TInt))
@@ -192,7 +202,7 @@ module Codegen = struct
     Hashtbl.add named_values "printf" printf
 
   let codegen_program = function
-    | Parsed_ast.Program (_import_stms, funcs, main_block) ->
+    | Typed_ast.Program (_import_stms, funcs, main_block) ->
         Printf.printf "Compiling %d functions\n" (List.length funcs);
         declare_extern_functions ();
 

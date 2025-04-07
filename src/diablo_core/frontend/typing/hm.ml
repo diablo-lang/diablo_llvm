@@ -38,7 +38,7 @@ module Unify = struct
 
   let rec unify (t1 : Type.t) (t2 : Type.t) : Subst.t =
     match (t1, t2) with
-    | Type.TInt, Type.TInt | Type.TBool, Type.TBool | Type.TVoid, Type.TVoid ->
+    | Type.TInt, Type.TInt | Type.TBool, Type.TBool | Type.TString, Type.TString | Type.TVoid, Type.TVoid ->
         Subst.empty
     | Type.TVar x, t | t, Type.TVar x ->
         if t = Type.TVar x then Subst.empty else [ (x, t) ]
@@ -254,4 +254,6 @@ let convert_to_typed_ast
   (* Finally, annotate the main block *)
   let typed_main_block = annotate_block env main_block in
 
-  Typed_ast.Program (typed_functions, typed_main_block)
+  (* TODO: import statements? *)
+  Typed_ast.Program ([], typed_functions, typed_main_block)
+

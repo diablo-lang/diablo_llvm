@@ -11,7 +11,7 @@ let pprint_type t = Type.to_string t
 
 let rec pprint_program program =
   match program with
-  | Program (fs, exprs) ->
+  | Program (_, fs, exprs) ->
       Printf.sprintf "%s %s"
         (String.concat "\n" (List.map pprint_function_defn fs))
         (pprint_block exprs)
@@ -50,6 +50,9 @@ and pprint_expr expr =
       Printf.sprintf "(%s if %s then %s else %s)" (pprint_type t)
         (pprint_expr cond) (pprint_block then_branch) (pprint_block else_branch)
   | Call (t, fn, args) ->
+      Printf.sprintf "(%s %s(%s))" (pprint_type t) fn
+        (String.concat ", " (List.map pprint_expr args))
+  | ExternCall (t, fn, args) ->
       Printf.sprintf "(%s %s(%s))" (pprint_type t) fn
         (String.concat ", " (List.map pprint_expr args))
 
