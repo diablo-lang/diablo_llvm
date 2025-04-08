@@ -1,6 +1,6 @@
-open Desugaring
-open Ast.Ast_types
-
+(* open Desugaring *)
+(* open Ast.Ast_types *)
+(* 
 let rec lower_program program =
   let (Desugared_ast.Program (imports, functions, main)) = program in
   let lowered_imports = List.map desugar_import imports in
@@ -43,4 +43,4 @@ and desugar_param (TParam (t, s)) = TParam (t, s)
 
 let desugar_module (Desugared_ast.Module (name, functions)) =
   let lowered_functions = List.map desugar_function functions in
-  Lowered_ast.Module (name, lowered_functions)
+  Lowered_ast.Module (name, lowered_functions) *)

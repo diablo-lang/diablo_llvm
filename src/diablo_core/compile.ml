@@ -2,8 +2,8 @@ open Lexing
 open Parsing
 open Resolution
 open Typing
-open Desugaring
-open Lowering
+(* open Desugaring *)
+(* open Lowering *)
 open Ir_gen
 
 let print_position lexbuf =
@@ -30,17 +30,17 @@ let compile (s : string) =
     print_endline (Pprint_tast.pprint_type program_type);
 
     print_endline "[*] Desugaring...";
-    let desugared_ast = Desugaring.desugar_program typed_ast in
+    (* let desugared_ast = Desugaring.desugar_program typed_ast in *)
     (* print_endline (Pprint_dast.pprint_program desugared_ast); *)
 
     print_endline "[*] Lowering to MIR...";
-    let lowered_ast = Lowering.lower_program desugared_ast in
+    (* let lowered_ast = Lowering.lower_program desugared_ast in *)
     (* print_endline (Pprint_mir.pprint_program lowered_ast); *)
 
     print_endline "[*] Generating LLVM IR...";
-    Llvm_ir_gen.Codegen.codegen_program lowered_ast;
-    Llvm_ir_gen.Codegen.print_module_to_stderr ();
-    Llvm_ir_gen.Codegen.save_module_to_file "llvm_bin/output.ll";
+    (* Llvm_ir_gen.Codegen.codegen_program lowered_ast; *)
+    (* Llvm_ir_gen.Codegen.print_module_to_stderr (); *)
+    (* Llvm_ir_gen.Codegen.save_module_to_file "llvm_bin/output.ll"; *)
 
     print_endline "[*] Done!"
   with
