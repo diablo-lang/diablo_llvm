@@ -103,11 +103,8 @@ let test_lambda_reference_outside () =
   in
   check (testable pp_program (=)) "Lambda referencing outer variable" expected (Alpha.rename program)
 
-let () =
-  run "Alpha Conversion Tests" [
-    "renaming", [
-      test_case "simple let" `Quick test_simple_let;
-      test_case "lambda shadowing" `Quick test_lambda_shadowing;
-      test_case "lambda references outer var" `Quick test_lambda_reference_outside;
-    ]
-  ]
+let tests = [
+  test_case "simple let" `Quick test_simple_let;
+  test_case "lambda shadowing" `Quick test_lambda_shadowing;
+  test_case "lambda references outer var" `Quick test_lambda_reference_outside;
+]

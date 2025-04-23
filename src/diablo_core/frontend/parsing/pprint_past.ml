@@ -41,3 +41,6 @@ and string_of_module_defn = function
 
 and string_of_program (Program (imports, declarations)) =
     "Program([\n" ^ String.concat "\n" (List.map string_of_import_stmt imports) ^ "\n], [\n" ^ String.concat "\n" (List.map string_of_top_level_declaration declarations) ^ "\n])"
+
+and string_of_module (Module (imports, module_defn)) =
+    "Module([\n" ^ String.concat "\n" (List.map string_of_import_stmt imports) ^ "\n], [\n" ^ (string_of_module_defn module_defn) ^ "\n])"

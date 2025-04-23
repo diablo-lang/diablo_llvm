@@ -12,6 +12,8 @@
 %token RBRACE
 %token LANGLE
 %token RANGLE
+%token LBRACKET
+%token RBRACKET
 %token RARROW
 %token RETURN
 %token COMMA
@@ -36,7 +38,6 @@
 %token FUNCTION
 %token IF
 %token ELSE
-%token MAIN
 %token MODULE
 %token IMPORT
 %token EOF
@@ -77,10 +78,6 @@ function_defn:
     | FUNCTION; name=ID; LPAREN; params=separated_list(COMMA, param_defn); RPAREN; RARROW; return_type=ty_const; LBRACE; body=expr; RBRACE { Function(name, params, body, return_type) }
     ;
 
-// main_func:
-//     | MAIN; LPAREN; RPAREN; RARROW; ty_const; LBRACE; body=expr; RBRACE { body }
-//     ;
-
 param_defn:
     | name=ID; COLON; ty=ty_const; { name, ty }
     ;
@@ -97,6 +94,7 @@ expr:
     | FALSE { Boolean false }
     | s=STRING_LITERAL { StringLiteral s }
     | UNIT { Unit }
+    | LBRACKET; l=separated_list(COMMA, expr); RBRACKET { List(l) }
     | op=un_op e=expr { UnOp(op, e) }
     | e1=expr op=bin_op e2=expr { BinOp(op, e1, e2) }
     | id=ID; EQUAL; e=expr; SEMICOLON; body=expr; { LetIn(id, e, body) }

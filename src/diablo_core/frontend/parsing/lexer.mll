@@ -21,6 +21,8 @@ rule read_token =
     | ")" { RPAREN }
     | "{" { LBRACE }
     | "}" { RBRACE }
+    | "[" { LBRACKET }
+    | "]" { RBRACKET }
     | "<" { LANGLE }
     | ">" { RANGLE }
     | "," { COMMA }
@@ -47,7 +49,6 @@ rule read_token =
     | "false" { FALSE }
     | "if" { IF }
     | "else" { ELSE }
-    | "main" { MAIN }
     | "module" { MODULE }
     | "import" { IMPORT }
     | string_literal { STRING_LITERAL (Lexing.lexeme lexbuf) }

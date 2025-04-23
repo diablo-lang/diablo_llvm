@@ -34,18 +34,12 @@ let compile source verbose =
     print_endline (Pprint_dast.string_of_program desugared_ast);
 
     print_endline "[*] Lowering to MIR...";
-    (* let alpha_renamed_ast = Alpha.Alpha.rename desugared_ast in *)
-    (* print_endline (Pprint_dast.string_of_program alpha_renamed_ast); *)
-    let alpha_prog = Alpha2.alpha_program desugared_ast in
+    let alpha_prog = Alpha.Alpha.rename desugared_ast in
     print_endline (Pprint_dast.string_of_program alpha_prog);
 
     print_endline "[*] Lowering to ANF...";
-    (* let anf = Anf.Anf.convert alpha_renamed_ast in *)
-    (* print_endline (Anf.Pprint_anf.string_of_program anf); *)
-    (* let anf2 = Anf2.anf_program desugared_ast in *)
-    (* print_endline (Pprint_dast.string_of_program anf2); *)
-    let _anf3 = Anf3.anf_of_program desugared_ast in
-    print_endline (Anf3.string_of_anf_program desugared_ast);
+    let _anf_prog = Anf.anf_of_program alpha_prog in
+    print_endline (Anf.string_of_anf_program alpha_prog);
     (* let lowered_ast = Lower.lower_program alpha_renamed_ast in *)
     (* if verbose then print_endline (Pprint_mir.string_of_program lowered_ast); *)
 
