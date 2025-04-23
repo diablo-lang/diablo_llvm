@@ -1,19 +1,8 @@
-fn xadd(int a, int b) -> int {
-    extern ext_add(a, b)
-}
+import math;
 
-fn socket(int domain, int type, int protocol) -> int {
-    extern socket(domain, type, protocol)
-}
-
-fn listen(int sockfd, int backlog) -> int {
-    extern listen(sockfd, backlog)
-}
-
-fn close(int fd) -> int {
-    extern close(fd)
-}
-
-main() {
-    1
+module Net {
+    fn ping(msg: int) -> int {
+        res = 42;
+        return add(msg, res)
+    }
 }

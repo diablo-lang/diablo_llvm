@@ -1,15 +1,13 @@
-fn xcreate_socket() -> int {
-    extern create_socket()
-}
+module Http {
+    fn xcreate_socket() -> int {
+        extern create_socket()
+    }
 
-fn xbind_socket(int sockfd) -> int {
-    extern bind_socket(sockfd)
-}
+    fn xbind_socket(sockfd: int) -> int {
+        extern bind_socket(sockfd)
+    }
 
-fn xlisten_socket(int sockfd) -> int {
-    extern listen_socket(sockfd)
-}
-
-main() {
-    1
+    fn xlisten_socket(sockfd: int) -> int {
+        extern listen_socket(sockfd)
+    }
 }

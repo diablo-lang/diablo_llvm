@@ -1,3 +1,7 @@
-fn add(int x, int y) -> int {
-    x + y + 3
+import net;
+
+module Math {
+    fn add(x: int, y: int) -> int {
+        return x + y + 3
+    }
 }

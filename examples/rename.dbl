@@ -1,0 +1,5 @@
+fn foo(x: int) -> int {
+    x
+}
+
+e = foo(42);

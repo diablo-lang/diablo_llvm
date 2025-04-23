@@ -1,63 +1,43 @@
 open Ast.Ast_types
 open Parsed_ast
 
-let pprint_bin_op op =
-  match op with
-  | BinOpPlus -> "+"
-  | BinOpMinus -> "-"
-  | BinOpMult -> "*"
-  | BinOpDiv -> "/"
-  | BinOpRem -> "%"
-  | BinOpLessThan -> "<"
-  | BinOpGreaterThan -> ">"
-  | BinOpLessThanEqual -> "<="
-  | BinOpGreaterThanEqual -> ">="
-  | BinOpAnd -> "&&"
-  | BinOpOr -> "||"
-  | BinOpEqual -> "=="
-  | BinOpNotEqual -> "!="
-
-let pprint_un_op op = match op with UnOpNot -> "!" | UnOpNegate -> "-"
-
-let rec pprint_expr expr =
-  match expr with
-  | Identifier s -> s
-  | Integer i -> string_of_int i
+let rec string_of_expr = function
+  | Identifier name -> name
+  | Integer n -> string_of_int n
   | Boolean b -> string_of_bool b
-  | StringLiteral s -> Printf.sprintf "\"%s\"" s
-  | UnOp (op, e) -> Printf.sprintf "(%s %s)" (pprint_un_op op) (pprint_expr e)
-  | BinOp (op, e1, e2) ->
-      Printf.sprintf "(%s %s %s)" (pprint_expr e1) (pprint_bin_op op)
-        (pprint_expr e2)
-  | Let (s, e) -> Printf.sprintf "let %s = %s" s (pprint_expr e)
-  | If (e, then_branch, else_branch) ->
-      Printf.sprintf "if %s then %s else %s" (pprint_expr e)
-        (pprint_block then_branch) (pprint_block else_branch)
-  | Call (s, es) ->
-      Printf.sprintf "%s(%s)" s (String.concat ", " (List.map pprint_expr es))
-  | ExternCall (s, es) ->
-      Printf.sprintf "extern %s(%s)" s
-        (String.concat ", " (List.map pprint_expr es))
+  | StringLiteral s -> "\"" ^ s ^ "\""
+  | Unit -> "()"
+  | Call (f, args) -> 
+      "Call(" ^ string_of_expr f ^ ", [" ^ String.concat ", " (List.map string_of_expr args) ^ "])"
+  | Lambda (params, body, ty) ->
+      "Lambda([" ^ String.concat ", " (List.map (fun (p, t) -> p ^ ": " ^ string_of_ty t) params) ^ "], " ^ string_of_expr body ^ ", " ^ string_of_ty ty ^ ")"
+  | LetIn (name, value, body) ->
+      "LetIn(" ^ name ^ ", " ^ string_of_expr value ^ ",\n  " ^ string_of_expr body ^ ")"
+  | If (cond, then_expr, else_expr) ->
+      "If(" ^ string_of_expr cond ^ ", " ^ string_of_expr then_expr ^ ", " ^ string_of_expr else_expr ^ ")"
+  | BinOp (op, left, right) ->
+      "BinOp(" ^ string_of_bin_op op ^ ", " ^ string_of_expr left ^ ", " ^ string_of_expr right ^ ")"
+  | UnOp (op, expr) ->
+      "UnOp(" ^ string_of_un_op op ^ ", " ^ string_of_expr expr ^ ")"
+  | List elements ->
+      "List([" ^ String.concat ", " (List.map string_of_expr elements) ^ "])"
 
-and pprint_block block =
-  match block with
-  | Block exprs -> String.concat "\n" (List.map pprint_expr exprs)
+and string_of_top_level_declaration = function
+  | Function (name, params, body, ty) ->
+      "Function(" ^ name ^ ", [" ^ String.concat ", " (List.map (fun (p, t) -> p ^ ": " ^ string_of_ty t) params) ^ "],\n  " ^ string_of_expr body ^ ", " ^ string_of_ty ty ^ ")"
+  | Let (name, value) ->
+      "Let(" ^ name ^ ", " ^ string_of_expr value ^ ")"
 
-let rec pprint_function_defn function_defn =
-  match function_defn with
-  | TFunction (name, params, return_type, body) ->
-      Printf.sprintf "function %s(%s): %s = %s" name
-        (String.concat ", " (List.map pprint_param params))
-        (Type.to_string return_type)
-        (pprint_block body)
+and string_of_import_stmt = function
+  | Import module_name -> "Import(" ^ module_name ^ ")"
 
-and pprint_param param =
-  match param with
-  | TParam (t, s) -> Printf.sprintf "%s %s" (Type.to_string t) s
+and string_of_module_file = function
+  | Module (imports, module_defn) ->
+      "Module([\n" ^ String.concat "\n" (List.map string_of_import_stmt imports) ^ "\n], [\n" ^ (string_of_module_defn module_defn) ^ "\n])"
 
-let pprint_program program =
-  match program with
-  | Program (_import_stms, fs, exprs) ->
-      Printf.sprintf "%s %s"
-        (String.concat "\n" (List.map pprint_function_defn fs))
-        (pprint_block exprs)
+and string_of_module_defn = function
+    | ModuleDefinition (name, decls) ->
+        "ModuleDefinition(" ^ name ^ ", [\n" ^ String.concat "\n" (List.map string_of_top_level_declaration decls) ^ "\n])"
+
+and string_of_program (Program (imports, declarations)) =
+    "Program([\n" ^ String.concat "\n" (List.map string_of_import_stmt imports) ^ "\n], [\n" ^ String.concat "\n" (List.map string_of_top_level_declaration declarations) ^ "\n])"

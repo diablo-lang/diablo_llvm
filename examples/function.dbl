@@ -1,8 +1,11 @@
-fn foo(int x, int y) -> int {
-    let z = x + y;
+fn z(x: int, y: int) -> int {
+    z = x - y;
+    x
+}
+
+fn foo(x: int, y:  int) -> int {
+    z = x + y;
     z + 1
 }
 
-main() {
-    foo(12, 12)
-}
+x = foo(12, 13) + z(14, 15);

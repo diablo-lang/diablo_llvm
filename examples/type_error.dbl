@@ -1,3 +1,16 @@
-main() {
-    1 + true
+fn foo(x: int) -> int {
+    x
 }
+
+fn entry() -> bool {
+    cond = if (12 > 24) {
+        true
+    } else {
+        false
+    };
+    xy = foo(42);
+    z = xy >= 12;
+    z and cond
+}
+
+e = entry();

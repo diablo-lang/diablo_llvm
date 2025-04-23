@@ -1,20 +1,25 @@
 open Ast.Ast_types
 
 type expr =
-  | Identifier of string
+  | Identifier of name
   | Integer of int
   | Boolean of bool
   | StringLiteral of string
-  | UnOp of un_op * expr
+  | Unit
+  | Call of expr * expr list
+  | Lambda of (name * ty) list * expr * ty
+  | LetIn of name * expr * expr
+  | If of expr * expr * expr
   | BinOp of bin_op * expr * expr
-  | Let of string * expr
-  | If of expr * block * block
-  | Call of string * expr list
-  | ExternCall of string * expr list
+  | UnOp of un_op * expr
+  | List of expr list
 
-and block = Block of expr list
+type top_level_declaration =
+  | Function of name * (name * ty) list * expr * ty
+  | Let of name * expr
 
-type function_defn = TFunction of string * param list * Type.t * block
-type module_defn = Module of string * function_defn list
 type import_stmt = Import of string
-type program = Program of import_stmt list * function_defn list * block
+type module_defn = ModuleDefinition of name * top_level_declaration list
+
+type module_file = Module of import_stmt list * module_defn
+type program = Program of import_stmt list * top_level_declaration list

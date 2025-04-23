@@ -25,6 +25,7 @@ rule read_token =
     | ">" { RANGLE }
     | "," { COMMA }
     | "->" { RARROW }
+    | ":" { COLON }
     | ";" { SEMICOLON }
     | "=" { EQUAL }
     | "+" { PLUS }
@@ -35,12 +36,12 @@ rule read_token =
     | "and" { AND }
     | "or" { OR }
     | "!" { BANG }
-    | "let" { LET }
     | "fn" { FUNCTION }
+    | "nil" { UNIT }
     | "return" { RETURN }
     | "int" { TYPE_INT }
     | "bool" { TYPE_BOOL }
-    | "void" { TYPE_VOID }
+    | "unit" { TYPE_UNIT }
     | "str" { TYPE_STRING }
     | "true" { TRUE }
     | "false" { FALSE }
@@ -49,7 +50,6 @@ rule read_token =
     | "main" { MAIN }
     | "module" { MODULE }
     | "import" { IMPORT }
-    | "extern" { EXTERN }
     | string_literal { STRING_LITERAL (Lexing.lexeme lexbuf) }
     | whitespace { read_token lexbuf }
     | "#" { read_comment lexbuf }

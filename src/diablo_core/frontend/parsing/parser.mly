@@ -15,6 +15,7 @@
 %token RARROW
 %token RETURN
 %token COMMA
+%token COLON
 %token SEMICOLON
 %token EQUAL
 %token PLUS
@@ -25,20 +26,19 @@
 %token AND
 %token OR
 %token BANG
-%token LET
 %token TYPE_INT
 %token TYPE_BOOL
-%token TYPE_VOID
+%token TYPE_UNIT
 %token TYPE_STRING
 %token TRUE
 %token FALSE
+%token UNIT
 %token FUNCTION
 %token IF
 %token ELSE
 %token MAIN
 %token MODULE
 %token IMPORT
-%token EXTERN
 %token EOF
 
 %right EQUAL
@@ -47,67 +47,73 @@
 %left AND OR
 %nonassoc BANG
 
+%start <Parsed_ast.module_file> module_file
 %start <Parsed_ast.program> program
 
 %%
 
 program:
-    | imports=list(import_stmt); functions=list(function_defn); main=main_block; EOF { Program(imports, functions, main) }
-    | imports=list(import_stmt); functions=list(function_defn); EOF { Program(imports, functions, Block []) }
+    | imports=list(import_decl); declarations=list(top_level_decl) EOF { Program(imports, declarations) }
     ;
 
-import_stmt:
+module_file:
+    | imports=list(import_decl); module_defn=module_defn; EOF { Module(imports, module_defn) }
+    ;
+
+top_level_decl:
+    | b=global_let_binding { b }
+    | f=function_defn { f }
+    ;
+
+import_decl:
     | IMPORT; module_name=ID; SEMICOLON { Import(module_name) }
     ;
 
+global_let_binding:
+    | id=ID; EQUAL; e=expr; SEMICOLON { Let(id, e) }
+    ;
+
 function_defn:
-    | FUNCTION; name=ID; params=params; RARROW; return_type=diablo_type; body=block { TFunction(name, params, return_type, body) }
+    | FUNCTION; name=ID; LPAREN; params=separated_list(COMMA, param_defn); RPAREN; RARROW; return_type=ty_const; LBRACE; body=expr; RBRACE { Function(name, params, body, return_type) }
+    ;
+
+// main_func:
+//     | MAIN; LPAREN; RPAREN; RARROW; ty_const; LBRACE; body=expr; RBRACE { body }
+//     ;
+
+param_defn:
+    | name=ID; COLON; ty=ty_const; { name, ty }
     ;
 
 module_defn:
-    | MODULE; name=ID; LBRACE; functions=list(function_defn); RBRACE { Module(name, functions) }
-    ;
-
-block:
-    | LBRACE; exprs=separated_list(SEMICOLON, expr); RBRACE { Block(exprs) }
+    | MODULE; name=ID; LBRACE; decls=list(top_level_decl); RBRACE { ModuleDefinition(name, decls) }
     ;
 
 expr:
     | LPAREN; e=expr; RPAREN { e }
-    | i=INT { Integer i }
     | id=ID { Identifier id }
+    | i=INT { Integer i }
     | TRUE { Boolean true }
     | FALSE { Boolean false }
     | s=STRING_LITERAL { StringLiteral s }
+    | UNIT { Unit }
     | op=un_op e=expr { UnOp(op, e) }
     | e1=expr op=bin_op e2=expr { BinOp(op, e1, e2) }
-    | LET; id=ID; EQUAL; e=expr { Let(id, e) }
-    | IF; cond_expr=expr; then_expr=block; ELSE; else_expr=block { If(cond_expr, then_expr, else_expr) }
-    | fn=ID; fn_args=args { Call(fn, fn_args) }
-    | EXTERN; fn=ID; fn_args=args { ExternCall(fn, fn_args) }
+    | id=ID; EQUAL; e=expr; SEMICOLON; body=expr; { LetIn(id, e, body) }
+    | IF; LPAREN; cond_expr=expr; RPAREN; LBRACE; then_expr=expr; RBRACE; ELSE; LBRACE; else_expr=expr RBRACE; { If(cond_expr, then_expr, else_expr) }
+    | FUNCTION; LPAREN; params=separated_list(COMMA, param_defn); RPAREN; RARROW; return_type=ty_const; LBRACE; body=expr; RBRACE { Lambda(params, body, return_type) }
+    | fn=expr; fn_args=args { Call(fn, fn_args) }
     | RETURN; e=expr { e }
-    ;
-
-param:
-    | param_type=diablo_type; name=ID; { TParam(param_type, name) }
-    ;
-
-params:
-    | LPAREN; params=separated_list(COMMA, param); RPAREN { params }
     ;
 
 args:
     | LPAREN; args=separated_list(COMMA, expr); RPAREN { args }
 
-diablo_type:
-    | TYPE_INT { TInt }
-    | TYPE_BOOL { TBool }
-    | TYPE_VOID { TVoid }
-    | TYPE_STRING { TString }
-    ;
-
-main_block:
-    | MAIN; LPAREN; RPAREN; body=block { body }
+ty_const:
+    | TYPE_INT { TConst "int" }
+    | TYPE_BOOL { TConst "bool" }
+    | TYPE_UNIT { TConst "unit" }
+    | TYPE_STRING { TConst "str" }
     ;
 
 %inline un_op:

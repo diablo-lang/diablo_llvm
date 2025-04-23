@@ -1,6 +1,6 @@
 
 
-fn foo(int x) -> int {
+fn foo(x: int) -> int {
 
     122}
 
@@ -8,7 +8,7 @@ fn foo(int x) -> int {
 
 
 
-fn bar(int y) -> bool {
+fn bar(y: int) -> bool {
 
     
     y > 2}
@@ -17,13 +17,11 @@ fn bar(int y) -> bool {
 
 
 
-main () {
+fn entry () -> bool {
     
-    12
-    
-    let x = 13
-    let x = 12
+    x = 13;
+    x = 12;
     return true}
 
-
+e = entry();
 

@@ -1,40 +1,63 @@
-module Type = struct
-  type t =
-    | TVar of string
-    | TInt
-    | TBool
-    | TString
-    | TVoid
-    | TFun of t list * t
+type name = string
 
-  let rec to_string = function
-    | TVar v -> v
-    | TInt -> "int"
-    | TBool -> "bool"
-    | TString -> "str"
-    | TVoid -> "void"
-    | TFun (args, ret) ->
-        Printf.sprintf "(%s -> %s)"
-          (String.concat ", " (List.map to_string args))
-          (to_string ret)
-end
+type id = int
+type level = int
 
-type param = TParam of Type.t * string
-type scheme = Forall of int list * Type.t
+type ty =
+  | TConst of name
+  | TApp of ty * ty list
+  | TArrow of ty list * ty
+  | TVar of tvar ref
+  | TList of ty
+
+and tvar =
+    | Unbound of id * level
+    | Link of ty
+    | Generic of id
 
 type bin_op =
-  | BinOpPlus
-  | BinOpMinus
-  | BinOpMult
-  | BinOpDiv
-  | BinOpRem
-  | BinOpLessThan
-  | BinOpGreaterThan
-  | BinOpLessThanEqual
-  | BinOpGreaterThanEqual
-  | BinOpAnd
-  | BinOpOr
-  | BinOpEqual
-  | BinOpNotEqual
+    | BinOpPlus
+    | BinOpMinus
+    | BinOpMult
+    | BinOpDiv
+    | BinOpRem
+    | BinOpLessThan
+    | BinOpGreaterThan
+    | BinOpLessThanEqual
+    | BinOpGreaterThanEqual
+    | BinOpAnd
+    | BinOpOr
+    | BinOpEqual
+    | BinOpNotEqual
+  
+  type un_op = UnOpNot | UnOpNegate
 
-type un_op = UnOpNot | UnOpNegate
+let rec string_of_ty = function
+  | TConst name -> name
+  | TApp(ty, ty_arg_list) ->
+    "(" ^ string_of_ty ty ^ " " ^ String.concat " " (List.map string_of_ty ty_arg_list) ^ ")"
+  | TArrow(param_ty_list, return_ty) ->
+    "(" ^ String.concat " -> " (List.map string_of_ty param_ty_list) ^ " -> " ^ string_of_ty return_ty ^ ")"
+  | TVar {contents = Link ty} -> string_of_ty ty
+  | TVar {contents = Generic id} -> "gen_" ^ string_of_int id
+  | TVar {contents = Unbound(id, _)} -> "unbound_" ^ string_of_int id
+  | TList ty -> "list " ^ string_of_ty ty
+
+let string_of_bin_op = function
+  | BinOpPlus -> "+"
+  | BinOpMinus -> "-"
+  | BinOpMult -> "*"
+  | BinOpDiv -> "/"
+  | BinOpRem -> "%"
+  | BinOpLessThan -> "<"
+  | BinOpGreaterThan -> ">"
+  | BinOpLessThanEqual -> "<="
+  | BinOpGreaterThanEqual -> ">="
+  | BinOpAnd -> "&&"
+  | BinOpOr -> "||"
+  | BinOpEqual -> "=="
+  | BinOpNotEqual -> "!="
+
+let string_of_un_op = function
+  | UnOpNegate -> "-"
+  | UnOpNot -> "!"

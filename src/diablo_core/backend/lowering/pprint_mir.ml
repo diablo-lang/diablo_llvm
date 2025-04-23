@@ -1,5 +1,5 @@
 open Ast.Ast_types
-open Desugared_ast
+open Lowered_ast
 
 let rec string_of_expr = function
   | Identifier (name, ty) -> name ^ " : " ^ string_of_ty ty

@@ -1,0 +1,24 @@
+import math;
+x = 42;
+
+fn foo(x: int, y: int) -> int {
+    return 12
+}
+
+fn baz(x: bool) -> bool {
+    return x
+}
+
+fn bar(p1: int, p2: int) -> bool {
+    a = foo(p1, p2);
+    b = baz(true);
+    c = x + a / 12 % 23 * 12 - 1;
+    return !false
+}
+
+fn entry() -> int {
+    res = bar(1, 2);
+    return 12
+}
+
+e = entry();

@@ -29,6 +29,10 @@ fn hello_world() {
 
 Refer to the [getting started guide](https://diablo-lang.org/guides/getting-started) to get up and running quickly. Also, check out the official [style guide](https://diablo-lang.org/guides/style-guide) for best practices.
 
+### Type Inference
+
+Hindley-Milner Algorithm W is used for type inference. Global functions require explicit type annotations. Although this could be inferred, it is required to be annotated to provide better readability and understanding of the interface.
+
 ### Language Constructs
 
 ```
@@ -109,6 +113,23 @@ fn map<T>(fn f: T -> T, list: List<T>) -> List<T> {
 }
 ```
 
+### Closures
+
+- All functions are closures. Global functions are closures that have a name and don't capture any values.
+- External functions are not closures, just function pointers.
+
+```
+# Closure (global function)
+fn foo(x: int) -> int {
+  # Not a closure
+  extern __foo(x)
+}
+```
+
+### Garbage Collector
+
+TBD
+
 ### BNF Grammar
 
 ```
@@ -157,6 +178,8 @@ Generate executable from LLVM IR linked with a specified library.
 clang-19 -target x86_64-pc-linux-gnu llvm_bin/output.ll -o llvm_bin/output -L. -lsocket -Wl,-rpath=.
 ```
 
+Generate executable from LLVM IR linked with libc.
+
 ```sh
 clang-19 -target x86_64-pc-linux-gnu llvm_bin/output.ll -o llvm_bin/output -lc -Wl,-rpath=.
 ```
@@ -183,5 +206,9 @@ Diablo source code is released under the [Apache License 2.0](./LICENSE).
 
 ## Resources
 
+- [OCaml Type Systems](https://github.com/tomprimozic/type-systems/tree/master)
+- [OCaml LLVM Kaleidoscope](https://releases.llvm.org/12.0.0/docs/tutorial/index.html)
+- [OCaml LLVM API Documentation](https://llvm.moe/ocaml/Llvm.html)
+- [Swift Closures](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/closures/)
 - [OCaml Programming: Correct + Efficient + Beautiful](https://cs3110.github.io/textbook)
 - [Creating the Bolt Compiler](https://mukulrathi.com/create-your-own-programming-language/intro-to-compiler/)
