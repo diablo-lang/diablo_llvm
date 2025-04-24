@@ -14,7 +14,5 @@ type expr =
   | UnOp of un_op * expr * ty
   | List of expr list * ty
 
-type top_level_declaration =
-  | Let of name * expr * ty
-
+type top_level_declaration = Let of name * expr * ty
 type program = Program of top_level_declaration list * ty

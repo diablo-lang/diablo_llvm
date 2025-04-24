@@ -23,11 +23,10 @@ let rec lower_expr = function
 
 let lower_top_level_declaration = function
   | Desugared_ast.Let (name, expr, ty) ->
-    Lowered_ast.Let (name, lower_expr expr, ty)
+      Lowered_ast.Let (name, lower_expr expr, ty)
 
 let lower_program (program : Desugared_ast.program) =
   match program with
   | Desugared_ast.Program (top_level_declarations, program_ty) ->
       Lowered_ast.Program
-        ( List.map lower_top_level_declaration top_level_declarations,
-          program_ty )
+        (List.map lower_top_level_declaration top_level_declarations, program_ty)

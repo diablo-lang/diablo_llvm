@@ -29,17 +29,17 @@ module Codegen = struct
     | Lowered_ast.StringLiteral s -> build_global_stringptr s "strtmp" builder
     (* TODO: Review *)
     | Lowered_ast.Identifier (name, ty) -> (
-        try match ty with
-        | TConst "int" | TConst "bool" | TConst "str" | TConst "unit" ->
-            print_endline ("load" ^ name ^ string_of_ty ty ^ "\n");
-            build_load (llvm_type ty)
-              (Hashtbl.find named_values name)
-              name builder
-        | TArrow _ ->
-            Printf.printf "funcccc %s\n" name;
-            Hashtbl.find named_values name
-        | _ ->
-            raise (LLVMError ("Unsupported type" ^ string_of_ty ty));
+        try
+          match ty with
+          | TConst "int" | TConst "bool" | TConst "str" | TConst "unit" ->
+              print_endline ("load" ^ name ^ string_of_ty ty ^ "\n");
+              build_load (llvm_type ty)
+                (Hashtbl.find named_values name)
+                name builder
+          | TArrow _ ->
+              Printf.printf "funcccc %s\n" name;
+              Hashtbl.find named_values name
+          | _ -> raise (LLVMError ("Unsupported type" ^ string_of_ty ty))
         with Not_found -> raise (LLVMError ("Unknown variable " ^ name)))
     | Lowered_ast.BinOp (op, lhs, rhs, _ty) -> (
         let lhs_val = codegen_expr lhs in
@@ -71,32 +71,33 @@ module Codegen = struct
         let cond_val = codegen_expr cond in
         let then_val = codegen_expr then_expr in
         let else_val = codegen_expr else_expr in
-        build_cond_br cond_val (block_of_value then_val) (block_of_value else_val) builder
+        build_cond_br cond_val (block_of_value then_val)
+          (block_of_value else_val) builder
     | Lowered_ast.List (_exprs, _ty) ->
-      raise (LLVMError "[List] Unsupported type")
+        raise (LLVMError "[List] Unsupported type")
     (* TODO: Review *)
     | Lowered_ast.Call (callee, args, ret_type) ->
-      let callee = codegen_expr callee in
-      let arg_tys =
-        Array.of_list
-          (List.map
-             (fun arg ->
-               match arg with
-               | Lowered_ast.Integer _ -> llvm_type (TConst "int")
-               | Lowered_ast.Boolean _ -> llvm_type (TConst "bool")
-               | Lowered_ast.StringLiteral _ -> llvm_type (TConst "str")
-               | _ -> raise (LLVMError "[Call] Unsupported type for argument"))
-             args)
-      in
-      let args = List.map codegen_expr args |> Array.of_list in
-      let fnty = function_type (llvm_type ret_type) arg_tys in
-      build_call fnty callee args "calltmp" builder
+        let callee = codegen_expr callee in
+        let arg_tys =
+          Array.of_list
+            (List.map
+               (fun arg ->
+                 match arg with
+                 | Lowered_ast.Integer _ -> llvm_type (TConst "int")
+                 | Lowered_ast.Boolean _ -> llvm_type (TConst "bool")
+                 | Lowered_ast.StringLiteral _ -> llvm_type (TConst "str")
+                 | _ -> raise (LLVMError "[Call] Unsupported type for argument"))
+               args)
+        in
+        let args = List.map codegen_expr args |> Array.of_list in
+        let fnty = function_type (llvm_type ret_type) arg_tys in
+        build_call fnty callee args "calltmp" builder
     (* TODO: Review *)
     | Lowered_ast.LetIn (name, expr, body, ty) ->
-      let expr_value = codegen_expr expr in
-      let alloca = build_alloca (llvm_type ty) name builder in
-      ignore (build_store expr_value alloca builder);
-      codegen_expr body
+        let expr_value = codegen_expr expr in
+        let alloca = build_alloca (llvm_type ty) name builder in
+        ignore (build_store expr_value alloca builder);
+        codegen_expr body
     (* TODO: Review *)
     | Lowered_ast.Lambda (params, body, return_type) ->
         let param_types = List.map (fun (_, ty) -> llvm_type ty) params in
@@ -105,7 +106,8 @@ module Codegen = struct
         in
         let fn = declare_function "lambda" func_type diablo_module in
         Hashtbl.add named_values "lambda" fn;
-        Printf.printf "In Lambda: %s\n" (string_of_llvalue fn); flush stdout;
+        Printf.printf "In Lambda: %s\n" (string_of_llvalue fn);
+        flush stdout;
         let _builder = builder_at_end context (entry_block fn) in
         let _params =
           List.map
@@ -116,17 +118,20 @@ module Codegen = struct
               param)
             params
         in
-        Printf.printf "Past Lambda: %s\n" (string_of_llvalue fn); flush stdout;
+        Printf.printf "Past Lambda: %s\n" (string_of_llvalue fn);
+        flush stdout;
         let body_val = codegen_expr body in
-        Printf.printf "Pasts Lambda: %s\n" (string_of_llvalue fn); flush stdout;
+        Printf.printf "Pasts Lambda: %s\n" (string_of_llvalue fn);
+        flush stdout;
         Hashtbl.remove named_values "lambda";
-        Printf.printf "Done Lambda: %s\n" (string_of_llvalue fn); flush stdout;
+        Printf.printf "Done Lambda: %s\n" (string_of_llvalue fn);
+        flush stdout;
         body_val
 
   let declare_extern_function name return_type param_types diablo_module =
     declare_function name
       (function_type (llvm_type return_type)
-          (Array.of_list (List.map llvm_type param_types)))
+         (Array.of_list (List.map llvm_type param_types)))
       diablo_module
 
   let declare_extern_functions () =
@@ -141,7 +146,7 @@ module Codegen = struct
     Hashtbl.add named_values "printf" printf
 
   let codegen_top_level_declaration = function
-    | Lowered_ast.Let(name, value_expr, _ty) ->
+    | Lowered_ast.Let (name, value_expr, _ty) ->
         let expr_val = codegen_expr value_expr in
         Hashtbl.add named_values name expr_val
 

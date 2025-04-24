@@ -20,6 +20,5 @@ type top_level_declaration =
 
 type import_stmt = Import of string
 type module_defn = ModuleDefinition of name * top_level_declaration list
-
 type module_file = Module of import_stmt list * module_defn
 type program = Program of import_stmt list * top_level_declaration list

@@ -16,7 +16,6 @@ let compile source verbose =
   print_endline "[*] Lexing...";
   let lexbuf = Lexing.from_string source in
   try
-
     print_endline "[*] Parsing...";
     let parsed_ast = Parser.program Lexer.read_token lexbuf in
     if verbose then print_endline (Pprint_past.string_of_program parsed_ast);
@@ -31,15 +30,28 @@ let compile source verbose =
 
     print_endline "[*] Desugaring...";
     let desugared_ast = Desugar.desugar_program typed_ast in
-    print_endline (Pprint_dast.string_of_program desugared_ast);
+    if verbose then print_endline (Pprint_dast.string_of_program desugared_ast);
 
     print_endline "[*] Lowering to MIR...";
     let alpha_prog = Alpha.Alpha.rename desugared_ast in
-    print_endline (Pprint_dast.string_of_program alpha_prog);
+    if verbose then print_endline (Pprint_dast.string_of_program alpha_prog);
 
     print_endline "[*] Lowering to ANF...";
-    let _anf_prog = Anf.anf_of_program alpha_prog in
-    print_endline (Anf.string_of_anf_program alpha_prog);
+
+    (* let anf_prog = Anf.anf_of_program alpha_prog in *)
+    (* print_endline (Anf.string_of_anf_program anf_prog); *)
+    print_endline "[*] Lowering to ANF...";
+    let anf_prog = Anf.convert_program alpha_prog in
+    print_endline (Anf.pp_program anf_prog);
+
+    print_endline "[*] Lowering to Closure...";
+    let closure_prog = Closure.convert_program anf_prog in
+    print_endline (Anf.pp_program closure_prog);
+
+    print_endline "[*] Hoisting...";
+    let hoisted_prog = Hoist.hoist_program closure_prog in
+    print_endline (Hoist.string_of_program hoisted_prog);
+
     (* let lowered_ast = Lower.lower_program alpha_renamed_ast in *)
     (* if verbose then print_endline (Pprint_mir.string_of_program lowered_ast); *)
 
@@ -47,7 +59,6 @@ let compile source verbose =
     (* Llvm_ir_gen.Codegen.codegen_program lowered_ast; *)
     (* Llvm_ir_gen.Codegen.save_module_to_file "llvm_bin/output.ll"; *)
     (* if true then Llvm_ir_gen.Codegen.print_module_to_stderr (); *)
-
     print_endline "[*] Done!"
   with
   | Lexer.SyntaxError msg ->
@@ -56,4 +67,4 @@ let compile source verbose =
       Printf.eprintf "[!] Parser error at %s\n" (print_position lexbuf)
   | Resolve.ImportError msg -> Printf.eprintf "[!] Import error: %s\n" msg
   | Hm.TypeError msg -> Printf.eprintf "[!] Type error at: %s\n" msg
-  (* | Llvm_ir_gen.Codegen.LLVMError msg -> Printf.eprintf "LLVM error: %s\n" msg *)
+(* | Llvm_ir_gen.Codegen.LLVMError msg -> Printf.eprintf "LLVM error: %s\n" msg *)

@@ -1,0 +1,10 @@
+y = 2;
+
+fn foo(x: int) -> int {
+    z = fn (y: int) -> int {
+        y
+    };
+    return y
+}
+
+e = foo(1);

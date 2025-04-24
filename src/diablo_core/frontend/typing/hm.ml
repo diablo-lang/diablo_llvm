@@ -87,7 +87,9 @@ let rec unify ty1 ty2 =
     | ty, TVar ({ contents = Unbound (id, level) } as tvar) ->
         occurs_check_adjust_levels id level ty;
         tvar := Link ty
-    | _, _ -> error "Cannot unify types"
+    | ty1, ty2 ->
+        error
+          ("Cannot unify types " ^ string_of_ty ty1 ^ " and " ^ string_of_ty ty2)
 
 let rec generalize level = function
   | TVar { contents = Unbound (id, other_level) } when other_level > level ->
@@ -185,7 +187,7 @@ let rec infer env level = function
           param_tys arg_exprs
       in
       (Typed_ast.Call (typed_callee_expr, typed_arg_exprs, return_ty), return_ty)
-  | Parsed_ast.StringLiteral s -> (Typed_ast.StringLiteral s, TConst "string")
+  | Parsed_ast.StringLiteral s -> (Typed_ast.StringLiteral s, TConst "str")
   | Parsed_ast.Integer i -> (Typed_ast.Integer i, TConst "int")
   | Parsed_ast.Boolean b -> (Typed_ast.Boolean b, TConst "bool")
   | Parsed_ast.Unit -> (Typed_ast.Unit, TConst "unit")
@@ -220,9 +222,8 @@ let rec infer env level = function
       in
       unify expr_ty un_op_ty;
       (Typed_ast.UnOp (un_op, typed_expr, un_op_ty), un_op_ty)
-  | Parsed_ast.List _expr_list ->
-      raise (TypeError "[List] Unsupported type")
-      (* let typed_elem_expr, elem_expr_ty = infer env level (List.hd expr_list) in
+  | Parsed_ast.List _expr_list -> raise (TypeError "[List] Unsupported type")
+(* let typed_elem_expr, elem_expr_ty = infer env level (List.hd expr_list) in
         List.iter
           (fun expr ->
             let typed_expr, expr_ty = infer env level expr in
